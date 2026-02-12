@@ -3,57 +3,67 @@ import { useState, useEffect } from "react";
 function App() {
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
+  const [log, setLog] = useState({});
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("tasks");
-      if (saved) setTasks(JSON.parse(saved));
+      const savedTasks = localStorage.getItem("tasks");
+      const savedLog = localStorage.getItem("log");
+      if (savedTasks) setTasks(JSON.parse(savedTasks));
+      if (savedLog) setLog(JSON.parse(savedLog));
     } catch {
       setTasks([]);
+      setLog({});
     }
   }, []);
 
-  const save = (updated) => {
+  const saveTasks = (updated) => {
     setTasks(updated);
     localStorage.setItem("tasks", JSON.stringify(updated));
   };
 
+  const saveLog = (updated) => {
+    setLog(updated);
+    localStorage.setItem("log", JSON.stringify(updated));
+  };
+
+  const today = () => new Date().toISOString().split("T")[0];
+
   const addTask = () => {
     if (task.trim() === "") return;
-
-    const newTask = {
-      text: task.trim(),
-      completed: false,
-      createdAt: new Date().toISOString(),
-      completedAt: null
-    };
-
-    save([...tasks, newTask]);
+    saveTasks([
+      ...tasks,
+      {
+        text: task.trim(),
+        completed: false,
+        createdAt: new Date().toISOString(),
+        completedAt: null
+      }
+    ]);
     setTask("");
   };
 
   const toggleTask = (index) => {
     const updated = [...tasks];
-    updated[index].completed = !updated[index].completed;
-    updated[index].completedAt = updated[index].completed
-      ? new Date().toISOString()
-      : null;
-    save(updated);
-  };
+    const t = updated[index];
 
-  const deleteTask = (index) => {
-    save(tasks.filter((_, i) => i !== index));
+    t.completed = !t.completed;
+    t.completedAt = t.completed ? new Date().toISOString() : null;
+
+    if (t.completed) {
+      const d = today();
+      saveLog({ ...log, [d]: (log[d] || 0) + 1 });
+    }
+
+    saveTasks(updated);
   };
 
   const newDay = () => {
-    save(tasks.filter(t => !t.completed));
+    saveTasks(tasks.filter(t => !t.completed));
   };
 
   const pending = tasks.filter(t => !t.completed);
   const completed = tasks.filter(t => t.completed);
-
-  const format = (iso) =>
-    new Date(iso).toLocaleString();
 
   return (
     <div style={{ padding: 20 }}>
@@ -72,14 +82,11 @@ function App() {
       <h3>Pending</h3>
       <ul>
         {pending.map((t) => {
-          const idx = tasks.indexOf(t);
+          const i = tasks.indexOf(t);
           return (
-            <li key={idx}>
-              <input type="checkbox" onChange={() => toggleTask(idx)} />
+            <li key={i}>
+              <input type="checkbox" onChange={() => toggleTask(i)} />
               {t.text}
-              <br />
-              <small>Created: {format(t.createdAt)}</small>
-              <button onClick={() => deleteTask(idx)}>x</button>
             </li>
           );
         })}
@@ -88,24 +95,25 @@ function App() {
       <h3>Completed</h3>
       <ul>
         {completed.map((t) => {
-          const idx = tasks.indexOf(t);
+          const i = tasks.indexOf(t);
           return (
-            <li key={idx} style={{ textDecoration: "line-through", color: "gray" }}>
+            <li key={i} style={{ textDecoration: "line-through", color: "gray" }}>
               <input
                 type="checkbox"
                 checked
-                onChange={() => toggleTask(idx)}
+                onChange={() => toggleTask(i)}
               />
               {t.text}
-              <br />
-              <small>
-                Created: {format(t.createdAt)} <br />
-                Completed: {format(t.completedAt)}
-              </small>
-              <button onClick={() => deleteTask(idx)}>x</button>
             </li>
           );
         })}
+      </ul>
+
+      <h3>Daily Log</h3>
+      <ul>
+        {Object.keys(log).sort().reverse().map(d => (
+          <li key={d}>{d} → {log[d]} tasks</li>
+        ))}
       </ul>
     </div>
   );
