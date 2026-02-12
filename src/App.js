@@ -5,8 +5,12 @@ function App() {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("tasks");
-    if (saved) setTasks(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem("tasks");
+      if (saved) setTasks(JSON.parse(saved));
+    } catch {
+      setTasks([]);
+    }
   }, []);
 
   const save = (updated) => {
@@ -16,23 +20,40 @@ function App() {
 
   const addTask = () => {
     if (task.trim() === "") return;
-    save([...tasks, { text: task, completed: false }]);
+
+    const newTask = {
+      text: task.trim(),
+      completed: false,
+      createdAt: new Date().toISOString(),
+      completedAt: null
+    };
+
+    save([...tasks, newTask]);
     setTask("");
   };
 
   const toggleTask = (index) => {
     const updated = [...tasks];
     updated[index].completed = !updated[index].completed;
+    updated[index].completedAt = updated[index].completed
+      ? new Date().toISOString()
+      : null;
     save(updated);
   };
 
+  const deleteTask = (index) => {
+    save(tasks.filter((_, i) => i !== index));
+  };
+
   const newDay = () => {
-    const pending = tasks.filter(t => !t.completed);
-    save(pending);
+    save(tasks.filter(t => !t.completed));
   };
 
   const pending = tasks.filter(t => !t.completed);
   const completed = tasks.filter(t => t.completed);
+
+  const format = (iso) =>
+    new Date(iso).toLocaleString();
 
   return (
     <div style={{ padding: 20 }}>
@@ -42,6 +63,7 @@ function App() {
       <input
         value={task}
         onChange={(e) => setTask(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && addTask()}
         placeholder="Add task"
       />
       <button onClick={addTask}>Add</button>
@@ -49,26 +71,41 @@ function App() {
 
       <h3>Pending</h3>
       <ul>
-        {pending.map((t, i) => (
-          <li key={i}>
-            <input type="checkbox" onChange={() => toggleTask(tasks.indexOf(t))} />
-            {t.text}
-          </li>
-        ))}
+        {pending.map((t) => {
+          const idx = tasks.indexOf(t);
+          return (
+            <li key={idx}>
+              <input type="checkbox" onChange={() => toggleTask(idx)} />
+              {t.text}
+              <br />
+              <small>Created: {format(t.createdAt)}</small>
+              <button onClick={() => deleteTask(idx)}>x</button>
+            </li>
+          );
+        })}
       </ul>
 
       <h3>Completed</h3>
       <ul>
-        {completed.map((t, i) => (
-          <li key={i}>
-            <input
-              type="checkbox"
-              checked
-              onChange={() => toggleTask(tasks.indexOf(t))}
-            />
-            {t.text}
-          </li>
-        ))}
+        {completed.map((t) => {
+          const idx = tasks.indexOf(t);
+          return (
+            <li key={idx} style={{ textDecoration: "line-through", color: "gray" }}>
+              <input
+                type="checkbox"
+                checked
+                onChange={() => toggleTask(idx)}
+              />
+              {t.text}
+              <br />
+              <small>
+                Created: {format(t.createdAt)} <br />
+                Completed: {format(t.completedAt)}
+              </small>
+              <button onClick={() => deleteTask(idx)}>x</button>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
