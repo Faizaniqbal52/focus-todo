@@ -4,11 +4,12 @@ function App() {
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
   const [log, setLog] = useState({});
+  const [showLog, setShowLog] = useState(false);
 
   useEffect(() => {
     try {
-      const savedTasks = localStorage.getItem("tasks");
-      const savedLog = localStorage.getItem("log");
+      const savedTasks = localStorage.getItem("focus_tasks");
+      const savedLog = localStorage.getItem("focus_log");
       if (savedTasks) setTasks(JSON.parse(savedTasks));
       if (savedLog) setLog(JSON.parse(savedLog));
     } catch {
@@ -19,12 +20,12 @@ function App() {
 
   const saveTasks = (updated) => {
     setTasks(updated);
-    localStorage.setItem("tasks", JSON.stringify(updated));
+    localStorage.setItem("focus_tasks", JSON.stringify(updated));
   };
 
   const saveLog = (updated) => {
     setLog(updated);
-    localStorage.setItem("log", JSON.stringify(updated));
+    localStorage.setItem("focus_log", JSON.stringify(updated));
   };
 
   const today = () => new Date().toISOString().split("T")[0];
@@ -52,7 +53,10 @@ function App() {
 
     if (t.completed) {
       const d = today();
-      saveLog({ ...log, [d]: (log[d] || 0) + 1 });
+      saveLog({
+        ...log,
+        [d]: [...(log[d] || []), t.text]
+      });
     }
 
     saveTasks(updated);
@@ -78,6 +82,9 @@ function App() {
       />
       <button onClick={addTask}>Add</button>
       <button onClick={newDay}>New Day</button>
+      <button onClick={() => setShowLog(!showLog)}>
+        {showLog ? "Hide Log" : "View Log"}
+      </button>
 
       <h3>Pending</h3>
       <ul>
@@ -109,12 +116,23 @@ function App() {
         })}
       </ul>
 
-      <h3>Daily Log</h3>
-      <ul>
-        {Object.keys(log).sort().reverse().map(d => (
-          <li key={d}>{d} → {log[d]} tasks</li>
-        ))}
-      </ul>
+      {showLog && (
+        <>
+          <h3>Daily Log</h3>
+          <ul>
+            {Object.keys(log).sort().reverse().map(d => (
+              <li key={d}>
+                <strong>{d}</strong>
+                <ul>
+                  {log[d].map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
