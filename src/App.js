@@ -84,6 +84,12 @@ function App() {
     setEditingText("");
   };
 
+  /* 🔥 FIX: Clear log */
+  const clearLog = () => {
+    setLog({});
+    localStorage.setItem("focus_log", JSON.stringify({}));
+  };
+
   const pending = tasks.filter(t => !t.completed);
   const completed = tasks.filter(t => t.completed);
 
@@ -143,9 +149,7 @@ function App() {
             return (
               <li key={i} className="task-card">
                 <input type="checkbox" onChange={() => toggleTask(i)} />
-                <div className="task-text">
-                  {renderTaskText(t, i)}
-                </div>
+                <div className="task-text">{renderTaskText(t, i)}</div>
                 <button className="danger" onClick={() => deleteTask(i)}>
                   ×
                 </button>
@@ -167,9 +171,7 @@ function App() {
                   checked
                   onChange={() => toggleTask(i)}
                 />
-                <div className="task-text">
-                  {renderTaskText(t, i)}
-                </div>
+                <div className="task-text">{renderTaskText(t, i)}</div>
                 <button className="danger" onClick={() => deleteTask(i)}>
                   ×
                 </button>
@@ -188,6 +190,11 @@ function App() {
       {showLog && (
         <section className="log-section">
           <h3 className="section-title">Daily Log</h3>
+
+          <button className="danger" onClick={clearLog}>
+            Clear Log
+          </button>
+
           <ul>
             {Object.keys(log)
               .sort()
