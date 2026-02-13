@@ -1,38 +1,250 @@
-.App {
-  text-align: center;
+/* ================= BASE ================= */
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: #0f172a;
 }
 
-.App-logo {
-  height: 40vmin;
+/* ================= APP CONTAINER ================= */
+.app {
+  max-width: 520px;
+  margin: 64px auto;
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 16px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+/* ================= HEADER ================= */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.progress {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ================= INPUT ================= */
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+  background: #f8fafc;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-row input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* ================= BUTTONS ================= */
+button {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+button.primary {
+  padding: 12px 18px;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  color: white;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
+}
+
+button.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.45);
+}
+
+button.primary:active {
+  transform: translateY(0);
+}
+
+/* ================= SECTION TITLES ================= */
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 10px;
+}
+
+.section-title.muted {
+  color: #94a3b8;
+}
+
+/* ================= TASK LIST ================= */
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 22px;
+}
+
+/* ================= TASK CARD ================= */
+.task-card {
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  margin-bottom: 10px;
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.1);
+}
+
+/* ================= WAVE EFFECT ================= */
+.task-card::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -120%;
+  width: 220%;
+  height: 220%;
+  background: radial-gradient(
+    circle at center,
+    rgba(37, 99, 235, 0.28),
+    rgba(37, 99, 235, 0.14),
+    transparent 70%
+  );
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: left 2s ease, opacity 0.8s ease;
   pointer-events: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.task-card:hover::before {
+  left: 120%;
+  opacity: 1;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* ================= COMPLETED ================= */
+.task-card.completed {
+  background: linear-gradient(180deg, #f1f5f9, #eaeef3);
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+/* ================= CHECKBOX ================= */
+.task-card input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+/* ================= TASK TEXT ================= */
+.task-text {
+  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 10px;
 }
 
-.App-link {
-  color: #61dafb;
+/* ================= EDIT ================= */
+.edit-btn {
+  background: #e5e7eb;
+  color: #334155;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.edit-btn:hover {
+  background: #dbe1e8;
+}
+
+.edit-input {
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 13px;
+}
+
+.edit-save {
+  background: #cbd5e1;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* ================= DELETE ================= */
+button.danger {
+  background: transparent;
+  color: #ef4444;
+  font-size: 18px;
+  padding: 4px 6px;
+}
+
+button.danger:hover {
+  color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* ================= LOG ================= */
+.log-toggle {
+  text-align: center;
+  margin-top: 18px;
+}
+
+.log-toggle button {
+  background: #e5e7eb;
+  color: #334155;
+  padding: 8px 18px;
+  border-radius: 999px;
+}
+
+.log-toggle button:hover {
+  background: #dbe1e8;
+}
+
+.log-section {
+  margin-top: 18px;
+  font-size: 14px;
+  color: #334155;
+}
+
+.log-section ul {
+  padding-left: 16px;
 }

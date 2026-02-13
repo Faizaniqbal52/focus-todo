@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./App.css";
 
 function App() {
   const [task, setTask] = useState("");
@@ -34,7 +35,7 @@ function App() {
   const today = () => new Date().toISOString().split("T")[0];
 
   const addTask = () => {
-    if (task.trim() === "") return;
+    if (!task.trim()) return;
     saveTasks([
       ...tasks,
       {
@@ -75,7 +76,7 @@ function App() {
   };
 
   const saveEdit = () => {
-    if (editingText.trim() === "") return;
+    if (!editingText.trim()) return;
     const updated = [...tasks];
     updated[editingIndex].text = editingText.trim();
     saveTasks(updated);
@@ -95,89 +96,130 @@ function App() {
       return (
         <>
           <input
+            className="edit-input"
             value={editingText}
             onChange={(e) => setEditingText(e.target.value)}
           />
-          <button onClick={saveEdit}>save</button>
+          <button className="edit-save" onClick={saveEdit}>
+            save
+          </button>
         </>
       );
     }
+
     return (
       <>
-        {t.text}
-        <button onClick={() => startEdit(i)}>edit</button>
+        <span>{t.text}</span>
+        <button className="edit-btn" onClick={() => startEdit(i)}>
+          edit
+        </button>
       </>
     );
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Focus Todo</h2>
-      <p>{completed.length} / {tasks.length} done</p>
+    <div className="app">
+      {/* Header */}
+      <header className="header">
+        <h1>Focus</h1>
+        <span className="progress">
+          {completed.length} / {tasks.length}
+        </span>
+      </header>
 
-      <input
-        value={task}
-        onChange={(e) => setTask(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && addTask()}
-        placeholder="Add task"
-      />
-      <button onClick={addTask}>Add</button>
-      <button onClick={newDay}>New Day</button>
-      <button onClick={() => setShowLog(!showLog)}>
-        {showLog ? "Hide Log" : "View Log"}
-      </button>
+      {/* Input */}
+      <div className="input-row">
+        <input
+          type="text"
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addTask()}
+          placeholder="What needs to be done?"
+        />
+        <button className="primary" onClick={addTask}>
+          Add
+        </button>
+      </div>
 
-      <h3>Pending</h3>
-      <ul>
-        {pending.map((t) => {
-          const i = tasks.indexOf(t);
-          return (
-            <li key={i}>
-              <input type="checkbox" onChange={() => toggleTask(i)} />
-              {renderTaskText(t, i)}
-              <button onClick={() => deleteTask(i)}>x</button>
-            </li>
-          );
-        })}
-      </ul>
-
-      <h3>Completed</h3>
-      <ul>
-        {completed.map((t) => {
-          const i = tasks.indexOf(t);
-          return (
-            <li
-              key={i}
-              style={{ textDecoration: "line-through", color: "gray" }}
-            >
-              <input
-                type="checkbox"
-                checked
-                onChange={() => toggleTask(i)}
-              />
-              {renderTaskText(t, i)}
-              <button onClick={() => deleteTask(i)}>x</button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {showLog && (
-        <>
-          <h3>Daily Log</h3>
-          <ul>
-            {Object.keys(log).sort().reverse().map(d => (
-              <li key={d}>
-                <strong>{d}</strong>
-                <ul>
-                  {log[d].map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
+      {/* Pending */}
+      <section>
+        <h3 className="section-title">Pending</h3>
+        <ul className="task-list">
+          {pending.map((t) => {
+            const i = tasks.indexOf(t);
+            return (
+              <li key={i} className="task-card">
+                <input type="checkbox" onChange={() => toggleTask(i)} />
+                <div className="task-text">
+                  {renderTaskText(t, i)}
+                </div>
+                <button
+                  className="danger"
+                  onClick={() => deleteTask(i)}
+                >
+                  ×
+                </button>
               </li>
-            ))}
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* Completed */}
+      <section>
+        <h3 className="section-title muted">Completed</h3>
+        <ul className="task-list">
+          {completed.map((t) => {
+            const i = tasks.indexOf(t);
+            return (
+              <li key={i} className="task-card completed">
+                <input
+                  type="checkbox"
+                  checked
+                  onChange={() => toggleTask(i)}
+                />
+                <div className="task-text">
+                  {renderTaskText(t, i)}
+                </div>
+                <button
+                  className="danger"
+                  onClick={() => deleteTask(i)}
+                >
+                  ×
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* Log Toggle */}
+      <div className="log-toggle">
+        <button onClick={() => setShowLog(!showLog)}>
+          {showLog ? "Hide Log" : "View Log"}
+        </button>
+      </div>
+
+      {/* Daily Log */}
+      {showLog && (
+        <section className="log-section">
+          <h3 className="section-title">Daily Log</h3>
+          <ul>
+            {Object.keys(log)
+              .sort()
+              .reverse()
+              .map((d) => (
+                <li key={d}>
+                  <strong>{d}</strong>
+                  <ul>
+                    {log[d].map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
           </ul>
-        </>
+        </section>
       )}
     </div>
   );
