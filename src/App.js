@@ -6,6 +6,9 @@ function App() {
   const [log, setLog] = useState({});
   const [showLog, setShowLog] = useState(false);
 
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingText, setEditingText] = useState("");
+
   useEffect(() => {
     try {
       const savedTasks = localStorage.getItem("focus_tasks");
@@ -62,12 +65,50 @@ function App() {
     saveTasks(updated);
   };
 
+  const deleteTask = (index) => {
+    saveTasks(tasks.filter((_, i) => i !== index));
+  };
+
+  const startEdit = (index) => {
+    setEditingIndex(index);
+    setEditingText(tasks[index].text);
+  };
+
+  const saveEdit = () => {
+    if (editingText.trim() === "") return;
+    const updated = [...tasks];
+    updated[editingIndex].text = editingText.trim();
+    saveTasks(updated);
+    setEditingIndex(null);
+    setEditingText("");
+  };
+
   const newDay = () => {
     saveTasks(tasks.filter(t => !t.completed));
   };
 
   const pending = tasks.filter(t => !t.completed);
   const completed = tasks.filter(t => t.completed);
+
+  const renderTaskText = (t, i) => {
+    if (editingIndex === i) {
+      return (
+        <>
+          <input
+            value={editingText}
+            onChange={(e) => setEditingText(e.target.value)}
+          />
+          <button onClick={saveEdit}>save</button>
+        </>
+      );
+    }
+    return (
+      <>
+        {t.text}
+        <button onClick={() => startEdit(i)}>edit</button>
+      </>
+    );
+  };
 
   return (
     <div style={{ padding: 20 }}>
@@ -93,7 +134,8 @@ function App() {
           return (
             <li key={i}>
               <input type="checkbox" onChange={() => toggleTask(i)} />
-              {t.text}
+              {renderTaskText(t, i)}
+              <button onClick={() => deleteTask(i)}>x</button>
             </li>
           );
         })}
@@ -104,13 +146,17 @@ function App() {
         {completed.map((t) => {
           const i = tasks.indexOf(t);
           return (
-            <li key={i} style={{ textDecoration: "line-through", color: "gray" }}>
+            <li
+              key={i}
+              style={{ textDecoration: "line-through", color: "gray" }}
+            >
               <input
                 type="checkbox"
                 checked
                 onChange={() => toggleTask(i)}
               />
-              {t.text}
+              {renderTaskText(t, i)}
+              <button onClick={() => deleteTask(i)}>x</button>
             </li>
           );
         })}
