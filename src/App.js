@@ -6,6 +6,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [log, setLog] = useState({});
   const [showLog, setShowLog] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingText, setEditingText] = useState("");
@@ -84,7 +85,6 @@ function App() {
     setEditingText("");
   };
 
-  /* 🔥 FIX: Clear log */
   const clearLog = () => {
     setLog({});
     localStorage.setItem("focus_log", JSON.stringify({}));
@@ -108,15 +108,7 @@ function App() {
         </>
       );
     }
-
-    return (
-      <>
-        <span>{t.text}</span>
-        <button className="edit-btn" onClick={() => startEdit(i)}>
-          edit
-        </button>
-      </>
-    );
+    return <span>{t.text}</span>;
   };
 
   return (
@@ -141,6 +133,13 @@ function App() {
         </button>
       </div>
 
+      {/* Universal Edit Mode Toggle */}
+      <div className="log-toggle">
+        <button onClick={() => setEditMode(!editMode)}>
+          {editMode ? "Done Editing" : "Edit Tasks"}
+        </button>
+      </div>
+
       <section>
         <h3 className="section-title">Pending</h3>
         <ul className="task-list">
@@ -149,10 +148,26 @@ function App() {
             return (
               <li key={i} className="task-card">
                 <input type="checkbox" onChange={() => toggleTask(i)} />
-                <div className="task-text">{renderTaskText(t, i)}</div>
-                <button className="danger" onClick={() => deleteTask(i)}>
-                  ×
-                </button>
+                <div className="task-text">
+                  {renderTaskText(t, i)}
+                </div>
+
+                {editMode && (
+                  <>
+                    <button
+                      className="edit-btn"
+                      onClick={() => startEdit(i)}
+                    >
+                      edit
+                    </button>
+                    <button
+                      className="danger"
+                      onClick={() => deleteTask(i)}
+                    >
+                      ×
+                    </button>
+                  </>
+                )}
               </li>
             );
           })}
@@ -171,10 +186,26 @@ function App() {
                   checked
                   onChange={() => toggleTask(i)}
                 />
-                <div className="task-text">{renderTaskText(t, i)}</div>
-                <button className="danger" onClick={() => deleteTask(i)}>
-                  ×
-                </button>
+                <div className="task-text">
+                  {renderTaskText(t, i)}
+                </div>
+
+                {editMode && (
+                  <>
+                    <button
+                      className="edit-btn"
+                      onClick={() => startEdit(i)}
+                    >
+                      edit
+                    </button>
+                    <button
+                      className="danger"
+                      onClick={() => deleteTask(i)}
+                    >
+                      ×
+                    </button>
+                  </>
+                )}
               </li>
             );
           })}
@@ -191,9 +222,11 @@ function App() {
         <section className="log-section">
           <h3 className="section-title">Daily Log</h3>
 
-          <button className="danger" onClick={clearLog}>
-            Clear Log
-          </button>
+          {editMode && (
+            <button className="danger" onClick={clearLog}>
+              Clear Log
+            </button>
+          )}
 
           <ul>
             {Object.keys(log)
