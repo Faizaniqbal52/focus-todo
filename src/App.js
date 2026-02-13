@@ -84,10 +84,6 @@ function App() {
     setEditingText("");
   };
 
-  const newDay = () => {
-    saveTasks(tasks.filter(t => !t.completed));
-  };
-
   const pending = tasks.filter(t => !t.completed);
   const completed = tasks.filter(t => t.completed);
 
@@ -119,7 +115,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* Header */}
       <header className="header">
         <h1>Focus</h1>
         <span className="progress">
@@ -127,7 +122,6 @@ function App() {
         </span>
       </header>
 
-      {/* Input */}
       <div className="input-row">
         <input
           type="text"
@@ -141,7 +135,6 @@ function App() {
         </button>
       </div>
 
-      {/* Pending */}
       <section>
         <h3 className="section-title">Pending</h3>
         <ul className="task-list">
@@ -153,10 +146,7 @@ function App() {
                 <div className="task-text">
                   {renderTaskText(t, i)}
                 </div>
-                <button
-                  className="danger"
-                  onClick={() => deleteTask(i)}
-                >
+                <button className="danger" onClick={() => deleteTask(i)}>
                   ×
                 </button>
               </li>
@@ -165,7 +155,6 @@ function App() {
         </ul>
       </section>
 
-      {/* Completed */}
       <section>
         <h3 className="section-title muted">Completed</h3>
         <ul className="task-list">
@@ -181,10 +170,7 @@ function App() {
                 <div className="task-text">
                   {renderTaskText(t, i)}
                 </div>
-                <button
-                  className="danger"
-                  onClick={() => deleteTask(i)}
-                >
+                <button className="danger" onClick={() => deleteTask(i)}>
                   ×
                 </button>
               </li>
@@ -193,14 +179,12 @@ function App() {
         </ul>
       </section>
 
-      {/* Log Toggle */}
       <div className="log-toggle">
         <button onClick={() => setShowLog(!showLog)}>
           {showLog ? "Hide Log" : "View Log"}
         </button>
       </div>
 
-      {/* Daily Log */}
       {showLog && (
         <section className="log-section">
           <h3 className="section-title">Daily Log</h3>
