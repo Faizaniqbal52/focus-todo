@@ -13,8 +13,8 @@ function App() {
 
   useEffect(() => {
     try {
-      const savedTasks = localStorage.getItem("focus_tasks");
-      const savedLog = localStorage.getItem("focus_log");
+      const savedTasks = localStorage.getItem("Kyro_tasks");
+      const savedLog = localStorage.getItem("Kyro_log");
       if (savedTasks) setTasks(JSON.parse(savedTasks));
       if (savedLog) setLog(JSON.parse(savedLog));
     } catch {
@@ -25,12 +25,12 @@ function App() {
 
   const saveTasks = (updated) => {
     setTasks(updated);
-    localStorage.setItem("focus_tasks", JSON.stringify(updated));
+    localStorage.setItem("Kyro_tasks", JSON.stringify(updated));
   };
 
   const saveLog = (updated) => {
     setLog(updated);
-    localStorage.setItem("focus_log", JSON.stringify(updated));
+    localStorage.setItem("Kyro_log", JSON.stringify(updated));
   };
 
   const today = () => new Date().toISOString().split("T")[0];
@@ -101,7 +101,7 @@ function App() {
         <>
           <input
             className="edit-input"
-            autoFocus
+            autoKyro
             value={editingText}
             onChange={(e) => setEditingText(e.target.value)}
             onKeyDown={(e) => {
