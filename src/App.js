@@ -85,9 +85,11 @@ function App() {
     setEditingText("");
   };
 
-  const clearLog = () => {
-    setLog({});
-    localStorage.setItem("focus_log", JSON.stringify({}));
+  /* 🔥 FIXED: Clear only specific date */
+  const clearLogByDate = (date) => {
+    const updated = { ...log };
+    delete updated[date];
+    saveLog(updated);
   };
 
   const pending = tasks.filter(t => !t.completed);
@@ -99,8 +101,16 @@ function App() {
         <>
           <input
             className="edit-input"
+            autoFocus
             value={editingText}
             onChange={(e) => setEditingText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveEdit();
+              if (e.key === "Escape") {
+                setEditingIndex(null);
+                setEditingText("");
+              }
+            }}
           />
           <button className="edit-save" onClick={saveEdit}>
             save
@@ -108,13 +118,14 @@ function App() {
         </>
       );
     }
+
     return <span>{t.text}</span>;
   };
 
   return (
     <div className="app">
       <header className="header">
-        <h1>Focus</h1>
+        <h1>Kyro</h1>
         <span className="progress">
           {completed.length} / {tasks.length}
         </span>
@@ -133,7 +144,6 @@ function App() {
         </button>
       </div>
 
-      {/* Universal Edit Mode Toggle */}
       <div className="log-toggle">
         <button onClick={() => setEditMode(!editMode)}>
           {editMode ? "Done Editing" : "Edit Tasks"}
@@ -148,9 +158,7 @@ function App() {
             return (
               <li key={i} className="task-card">
                 <input type="checkbox" onChange={() => toggleTask(i)} />
-                <div className="task-text">
-                  {renderTaskText(t, i)}
-                </div>
+                <div className="task-text">{renderTaskText(t, i)}</div>
 
                 {editMode && (
                   <>
@@ -186,9 +194,7 @@ function App() {
                   checked
                   onChange={() => toggleTask(i)}
                 />
-                <div className="task-text">
-                  {renderTaskText(t, i)}
-                </div>
+                <div className="task-text">{renderTaskText(t, i)}</div>
 
                 {editMode && (
                   <>
@@ -222,19 +228,25 @@ function App() {
         <section className="log-section">
           <h3 className="section-title">Daily Log</h3>
 
-          {editMode && (
-            <button className="danger" onClick={clearLog}>
-              Clear Log
-            </button>
-          )}
-
           <ul>
             {Object.keys(log)
               .sort()
               .reverse()
               .map((d) => (
-                <li key={d}>
-                  <strong>{d}</strong>
+                <li key={d} style={{ marginBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <strong>{d}</strong>
+
+                    {editMode && (
+                      <button
+                        className="danger"
+                        onClick={() => clearLogByDate(d)}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
                   <ul>
                     {log[d].map((item, i) => (
                       <li key={i}>{item}</li>
