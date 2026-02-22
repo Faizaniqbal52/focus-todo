@@ -126,8 +126,8 @@ function App() {
     <div className="app">
       <header className="header">
         <h1 className="brand">
-  <span className="brand-icon">K</span>
-  Kyro
+  <span className="brand-icon">S</span>
+  SRYA
 </h1>
 
         <span className="progress">
