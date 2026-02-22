@@ -127,7 +127,7 @@ function App() {
       <header className="header">
         <h1 className="brand">
   <span className="brand-icon">S</span>
-  SRYA
+  Srya
 </h1>
 
         <span className="progress">
