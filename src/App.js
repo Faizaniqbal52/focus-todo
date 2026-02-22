@@ -35,17 +35,31 @@ function App() {
 
   const today = () => new Date().toISOString().split("T")[0];
 
+  /* ================= TASKS ================= */
+
   const addTask = () => {
-    if (!task.trim()) return;
+    const trimmed = task.trim();
+    if (!trimmed) return;
+
+    // Prevent duplicate tasks (case insensitive)
+    const exists = tasks.some(
+      (t) => t.text.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      alert("Task already exists.");
+      return;
+    }
+
     saveTasks([
       ...tasks,
       {
-        text: task.trim(),
+        text: trimmed,
         completed: false,
         createdAt: new Date().toISOString(),
         completedAt: null
       }
     ]);
+
     setTask("");
   };
 
@@ -58,16 +72,22 @@ function App() {
 
     if (t.completed) {
       const d = today();
-      saveLog({
-        ...log,
-        [d]: [...(log[d] || []), t.text]
-      });
+
+      // Prevent duplicate log entry
+      const existingEntries = log[d] || [];
+      if (!existingEntries.includes(t.text)) {
+        saveLog({
+          ...log,
+          [d]: [...existingEntries, t.text]
+        });
+      }
     }
 
     saveTasks(updated);
   };
 
   const deleteTask = (index) => {
+    if (!window.confirm("Delete this task?")) return;
     saveTasks(tasks.filter((_, i) => i !== index));
   };
 
@@ -78,22 +98,39 @@ function App() {
 
   const saveEdit = () => {
     if (!editingText.trim()) return;
+
     const updated = [...tasks];
     updated[editingIndex].text = editingText.trim();
     saveTasks(updated);
+
     setEditingIndex(null);
     setEditingText("");
   };
 
-  /* 🔥 FIXED: Clear only specific date */
+  /* ================= LOG ================= */
+
   const clearLogByDate = (date) => {
+    if (!window.confirm("Clear entire day log?")) return;
     const updated = { ...log };
     delete updated[date];
     saveLog(updated);
   };
 
-  const pending = tasks.filter(t => !t.completed);
-  const completed = tasks.filter(t => t.completed);
+  const deleteLogItem = (date, itemIndex) => {
+    if (!window.confirm("Delete this log entry?")) return;
+
+    const updated = { ...log };
+    updated[date] = updated[date].filter((_, i) => i !== itemIndex);
+
+    if (updated[date].length === 0) {
+      delete updated[date];
+    }
+
+    saveLog(updated);
+  };
+
+  const pending = tasks.filter((t) => !t.completed);
+  const completed = tasks.filter((t) => t.completed);
 
   const renderTaskText = (t, i) => {
     if (editingIndex === i) {
@@ -101,7 +138,7 @@ function App() {
         <>
           <input
             className="edit-input"
-            autoKyro
+            autoFocus
             value={editingText}
             onChange={(e) => setEditingText(e.target.value)}
             onKeyDown={(e) => {
@@ -126,10 +163,9 @@ function App() {
     <div className="app">
       <header className="header">
         <h1 className="brand">
-  <span className="brand-icon">S</span>
-  Srya
-</h1>
-
+          <span className="brand-icon">S</span>
+          Srya
+        </h1>
         <span className="progress">
           {completed.length} / {tasks.length}
         </span>
@@ -154,73 +190,71 @@ function App() {
         </button>
       </div>
 
+      {/* ================= PENDING ================= */}
+
       <section>
         <h3 className="section-title">Pending</h3>
-        <ul className="task-list">
-          {pending.map((t) => {
-            const i = tasks.indexOf(t);
-            return (
-              <li key={i} className="task-card">
-                <input type="checkbox" onChange={() => toggleTask(i)} />
-                <div className="task-text">{renderTaskText(t, i)}</div>
 
-                {editMode && (
-                  <>
-                    <button
-                      className="edit-btn"
-                      onClick={() => startEdit(i)}
-                    >
-                      edit
-                    </button>
-                    <button
-                      className="danger"
-                      onClick={() => deleteTask(i)}
-                    >
-                      ×
-                    </button>
-                  </>
-                )}
-              </li>
-            );
-          })}
+        {pending.length === 0 && (
+          <p style={{ opacity: 0.6 }}>No pending tasks.</p>
+        )}
+
+        <ul className="task-list">
+          {pending.map((t, i) => (
+            <li key={i} className="task-card">
+              <input type="checkbox" onChange={() => toggleTask(i)} />
+              <div className="task-text">{renderTaskText(t, i)}</div>
+
+              {editMode && (
+                <>
+                  <button className="edit-btn" onClick={() => startEdit(i)}>
+                    edit
+                  </button>
+                  <button className="danger" onClick={() => deleteTask(i)}>
+                    ×
+                  </button>
+                </>
+              )}
+            </li>
+          ))}
         </ul>
       </section>
+
+      {/* ================= COMPLETED ================= */}
 
       <section>
         <h3 className="section-title muted">Completed</h3>
-        <ul className="task-list">
-          {completed.map((t) => {
-            const i = tasks.indexOf(t);
-            return (
-              <li key={i} className="task-card completed">
-                <input
-                  type="checkbox"
-                  checked
-                  onChange={() => toggleTask(i)}
-                />
-                <div className="task-text">{renderTaskText(t, i)}</div>
 
-                {editMode && (
-                  <>
-                    <button
-                      className="edit-btn"
-                      onClick={() => startEdit(i)}
-                    >
-                      edit
-                    </button>
-                    <button
-                      className="danger"
-                      onClick={() => deleteTask(i)}
-                    >
-                      ×
-                    </button>
-                  </>
-                )}
-              </li>
-            );
-          })}
+        {completed.length === 0 && (
+          <p style={{ opacity: 0.6 }}>Nothing completed yet.</p>
+        )}
+
+        <ul className="task-list">
+          {completed.map((t, i) => (
+            <li key={i} className="task-card completed">
+              <input
+                type="checkbox"
+                checked
+                onChange={() => toggleTask(i)}
+              />
+              <div className="task-text">{renderTaskText(t, i)}</div>
+
+              {editMode && (
+                <>
+                  <button className="edit-btn" onClick={() => startEdit(i)}>
+                    edit
+                  </button>
+                  <button className="danger" onClick={() => deleteTask(i)}>
+                    ×
+                  </button>
+                </>
+              )}
+            </li>
+          ))}
         </ul>
       </section>
+
+      {/* ================= LOG ================= */}
 
       <div className="log-toggle">
         <button onClick={() => setShowLog(!showLog)}>
@@ -232,13 +266,23 @@ function App() {
         <section className="log-section">
           <h3 className="section-title">Daily Log</h3>
 
+          {Object.keys(log).length === 0 && (
+            <p style={{ opacity: 0.6 }}>No activity yet.</p>
+          )}
+
           <ul>
             {Object.keys(log)
               .sort()
               .reverse()
               .map((d) => (
                 <li key={d} style={{ marginBottom: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                  >
                     <strong>{d}</strong>
 
                     {editMode && (
@@ -253,7 +297,25 @@ function App() {
 
                   <ul>
                     {log[d].map((item, i) => (
-                      <li key={i}>{item}</li>
+                      <li
+                        key={i}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}
+                      >
+                        {item}
+
+                        {editMode && (
+                          <button
+                            className="danger"
+                            onClick={() => deleteLogItem(d, i)}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </li>
                     ))}
                   </ul>
                 </li>
