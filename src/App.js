@@ -196,7 +196,7 @@ function App() {
         <h3 className="section-title">Pending</h3>
 
         {pending.length === 0 && (
-          <p style={{ opacity: 0.6 }}>No pending tasks.</p>
+          <p className="empty-state">No pending tasks.</p>
         )}
 
         <ul className="task-list">
