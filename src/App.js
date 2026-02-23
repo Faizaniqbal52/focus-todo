@@ -1,183 +1,137 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-import { auth, signInWithGoogle, logOut } from "./firebase";
+import { auth, signInWithGoogle, logOut, db } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc
+} from "firebase/firestore";
 
 function App() {
-  const [user, setUser] = useState(null);
-
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
-  const [log, setLog] = useState({});
-  const [showLog, setShowLog] = useState(false);
+  const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
 
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
 
   /* ================= AUTH ================= */
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        await loadTasks(currentUser.uid);
+      } else {
+        setUser(null);
+        setTasks([]);
+      }
     });
 
     return () => unsubscribe();
   }, []);
 
-  /* ================= LOCAL STORAGE ================= */
+  /* ================= LOAD TASKS ================= */
 
-  useEffect(() => {
-    if (!user) return;
-
-    try {
-      const savedTasks = localStorage.getItem("Kyro_tasks");
-      const savedLog = localStorage.getItem("Kyro_log");
-      if (savedTasks) setTasks(JSON.parse(savedTasks));
-      if (savedLog) setLog(JSON.parse(savedLog));
-    } catch {
-      setTasks([]);
-      setLog({});
-    }
-  }, [user]);
-
-  const saveTasks = (updated) => {
-    setTasks(updated);
-    localStorage.setItem("Kyro_tasks", JSON.stringify(updated));
+  const loadTasks = async (uid) => {
+    const snapshot = await getDocs(collection(db, "users", uid, "tasks"));
+    const loaded = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data()
+    }));
+    setTasks(loaded);
   };
 
-  const saveLog = (updated) => {
-    setLog(updated);
-    localStorage.setItem("Kyro_log", JSON.stringify(updated));
-  };
+  /* ================= ADD TASK ================= */
 
-  const today = () => new Date().toISOString().split("T")[0];
-
-  /* ================= TASKS ================= */
-
-  const addTask = () => {
+  const addTask = async () => {
     const trimmed = task.trim();
-    if (!trimmed) return;
+    if (!trimmed || !user) return;
 
     const exists = tasks.some(
       (t) => t.text.toLowerCase() === trimmed.toLowerCase()
     );
+
     if (exists) {
       alert("Task already exists.");
       return;
     }
 
-    saveTasks([
-      ...tasks,
-      {
-        text: trimmed,
-        completed: false,
-        createdAt: new Date().toISOString(),
-        completedAt: null
-      }
-    ]);
+    await addDoc(collection(db, "users", user.uid, "tasks"), {
+      text: trimmed,
+      completed: false,
+      createdAt: new Date()
+    });
 
     setTask("");
+    loadTasks(user.uid);
   };
 
-  const toggleTask = (index) => {
-    const updated = [...tasks];
-    const t = updated[index];
+  /* ================= TOGGLE TASK ================= */
 
-    t.completed = !t.completed;
-    t.completedAt = t.completed ? new Date().toISOString() : null;
+  const toggleTask = async (taskObj) => {
+    if (!user) return;
 
-    if (t.completed) {
-      const d = today();
-      const existingEntries = log[d] || [];
-      if (!existingEntries.includes(t.text)) {
-        saveLog({
-          ...log,
-          [d]: [...existingEntries, t.text]
-        });
-      }
-    }
+    const ref = doc(db, "users", user.uid, "tasks", taskObj.id);
 
-    saveTasks(updated);
+    await updateDoc(ref, {
+      completed: !taskObj.completed
+    });
+
+    loadTasks(user.uid);
   };
 
-  const deleteTask = (index) => {
+  /* ================= DELETE TASK ================= */
+
+  const deleteTask = async (taskObj) => {
+    if (!user) return;
     if (!window.confirm("Delete this task?")) return;
-    saveTasks(tasks.filter((_, i) => i !== index));
+
+    await deleteDoc(doc(db, "users", user.uid, "tasks", taskObj.id));
+    loadTasks(user.uid);
   };
 
-  const startEdit = (index) => {
-    setEditingIndex(index);
-    setEditingText(tasks[index].text);
+  /* ================= EDIT TASK ================= */
+
+  const startEdit = (taskObj) => {
+    setEditingId(taskObj.id);
+    setEditingText(taskObj.text);
   };
 
-  const saveEdit = () => {
-    if (!editingText.trim()) return;
+  const saveEdit = async () => {
+    if (!editingText.trim() || !user) return;
 
-    const updated = [...tasks];
-    updated[editingIndex].text = editingText.trim();
-    saveTasks(updated);
+    const ref = doc(db, "users", user.uid, "tasks", editingId);
 
-    setEditingIndex(null);
+    await updateDoc(ref, {
+      text: editingText.trim()
+    });
+
+    setEditingId(null);
     setEditingText("");
+    loadTasks(user.uid);
   };
 
-  /* ================= LOG ================= */
-
-  const clearLogByDate = (date) => {
-    if (!window.confirm("Clear entire day log?")) return;
-    const updated = { ...log };
-    delete updated[date];
-    saveLog(updated);
-  };
-
-  const deleteLogItem = (date, itemIndex) => {
-    if (!window.confirm("Delete this log entry?")) return;
-
-    const updated = { ...log };
-    updated[date] = updated[date].filter((_, i) => i !== itemIndex);
-
-    if (updated[date].length === 0) delete updated[date];
-
-    saveLog(updated);
-  };
+  /* ================= FILTER ================= */
 
   const pending = tasks.filter((t) => !t.completed);
   const completed = tasks.filter((t) => t.completed);
-
-  const renderTaskText = (t, i) => {
-    if (editingIndex === i) {
-      return (
-        <>
-          <input
-            className="edit-input"
-            autoFocus
-            value={editingText}
-            onChange={(e) => setEditingText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") saveEdit();
-              if (e.key === "Escape") {
-                setEditingIndex(null);
-                setEditingText("");
-              }
-            }}
-          />
-          <button className="edit-save" onClick={saveEdit}>
-            save
-          </button>
-        </>
-      );
-    }
-
-    return <span>{t.text}</span>;
-  };
 
   /* ================= LOGIN SCREEN ================= */
 
   if (!user) {
     return (
-      <div className="app" style={{ textAlign: "center" }}>
-        <h1 style={{ marginBottom: "40px" }}>Srya</h1>
+      <div className="app">
+        <h1 className="brand">
+          <span className="brand-icon">S</span>
+          Srya
+        </h1>
+
         <button className="primary" onClick={signInWithGoogle}>
           Continue with Google
         </button>
@@ -185,7 +139,7 @@ function App() {
     );
   }
 
-  /* ================= MAIN APP ================= */
+  /* ================= MAIN UI ================= */
 
   return (
     <div className="app">
@@ -195,14 +149,22 @@ function App() {
           Srya
         </h1>
 
-        <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
+        <div>
           <span className="progress">
             {completed.length} / {tasks.length}
           </span>
-          <button onClick={logOut}>Logout</button>
+
+          <button
+            style={{ marginLeft: "15px" }}
+            className="danger"
+            onClick={logOut}
+          >
+            Logout
+          </button>
         </div>
       </header>
 
+      {/* INPUT */}
       <div className="input-row">
         <input
           type="text"
@@ -216,13 +178,14 @@ function App() {
         </button>
       </div>
 
+      {/* EDIT MODE TOGGLE */}
       <div className="log-toggle">
         <button onClick={() => setEditMode(!editMode)}>
           {editMode ? "Done Editing" : "Edit Tasks"}
         </button>
       </div>
 
-      {/* PENDING */}
+      {/* ================= PENDING ================= */}
       <section className="panel">
         <h3 className="section-title">Pending</h3>
 
@@ -231,22 +194,39 @@ function App() {
         )}
 
         <ul className="task-list">
-          {pending.map((t, i) => (
+          {pending.map((t) => (
             <li
-              key={i}
+              key={t.id}
               className="task-card"
-              onClick={() => toggleTask(i)}
+              onClick={() => toggleTask(t)}
             >
               <input
                 type="checkbox"
                 checked={t.completed}
-                onChange={() => toggleTask(i)}
+                onChange={() => toggleTask(t)}
                 onClick={(e) => e.stopPropagation()}
               />
 
-              <div className="task-text">
-                {renderTaskText(t, i)}
-              </div>
+              {editingId === t.id ? (
+                <>
+                  <input
+                    className="edit-input"
+                    value={editingText}
+                    onChange={(e) => setEditingText(e.target.value)}
+                  />
+                  <button
+                    className="edit-save"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      saveEdit();
+                    }}
+                  >
+                    save
+                  </button>
+                </>
+              ) : (
+                <div className="task-text">{t.text}</div>
+              )}
 
               {editMode && (
                 <>
@@ -254,7 +234,7 @@ function App() {
                     className="edit-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      startEdit(i);
+                      startEdit(t);
                     }}
                   >
                     edit
@@ -264,7 +244,7 @@ function App() {
                     className="danger"
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteTask(i);
+                      deleteTask(t);
                     }}
                   >
                     ×
@@ -276,7 +256,7 @@ function App() {
         </ul>
       </section>
 
-      {/* COMPLETED */}
+      {/* ================= COMPLETED ================= */}
       <section className="panel">
         <h3 className="section-title muted">Completed</h3>
 
@@ -285,106 +265,36 @@ function App() {
         )}
 
         <ul className="task-list">
-          {completed.map((t, i) => (
+          {completed.map((t) => (
             <li
-              key={i}
+              key={t.id}
               className="task-card completed"
-              onClick={() => toggleTask(i)}
+              onClick={() => toggleTask(t)}
             >
               <input
                 type="checkbox"
                 checked
-                onChange={() => toggleTask(i)}
+                onChange={() => toggleTask(t)}
                 onClick={(e) => e.stopPropagation()}
               />
 
-              <div className="task-text">
-                {renderTaskText(t, i)}
-              </div>
+              <div className="task-text">{t.text}</div>
 
               {editMode && (
-                <>
-                  <button
-                    className="edit-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startEdit(i);
-                    }}
-                  >
-                    edit
-                  </button>
-
-                  <button
-                    className="danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteTask(i);
-                    }}
-                  >
-                    ×
-                  </button>
-                </>
+                <button
+                  className="danger"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteTask(t);
+                  }}
+                >
+                  ×
+                </button>
               )}
             </li>
           ))}
         </ul>
       </section>
-
-      {/* LOG */}
-      <div className="log-toggle">
-        <button onClick={() => setShowLog(!showLog)}>
-          {showLog ? "Hide Log" : "View Log"}
-        </button>
-      </div>
-
-      {showLog && (
-        <section className="panel log-section">
-          <h3 className="section-title">Daily Log</h3>
-
-          {Object.keys(log).length === 0 && (
-            <p className="empty-state">No activity yet.</p>
-          )}
-
-          <ul>
-            {Object.keys(log)
-              .sort()
-              .reverse()
-              .map((d) => (
-                <li key={d} className="log-day">
-                  <div className="log-day-header">
-                    <strong>{d}</strong>
-
-                    {editMode && (
-                      <button
-                        className="danger"
-                        onClick={() => clearLogByDate(d)}
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
-                  <ul>
-                    {log[d].map((item, i) => (
-                      <li key={i} className="log-item">
-                        {item}
-
-                        {editMode && (
-                          <button
-                            className="danger"
-                            onClick={() => deleteLogItem(d, i)}
-                          >
-                            ×
-                          </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }
