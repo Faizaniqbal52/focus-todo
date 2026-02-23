@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import { auth, signInWithGoogle, logOut } from "./firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 function App() {
+  const [user, setUser] = useState(null);
+
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
   const [log, setLog] = useState({});
@@ -11,7 +15,21 @@ function App() {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingText, setEditingText] = useState("");
 
+  /* ================= AUTH ================= */
+
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  /* ================= LOCAL STORAGE ================= */
+
+  useEffect(() => {
+    if (!user) return;
+
     try {
       const savedTasks = localStorage.getItem("Kyro_tasks");
       const savedLog = localStorage.getItem("Kyro_log");
@@ -21,7 +39,7 @@ function App() {
       setTasks([]);
       setLog({});
     }
-  }, []);
+  }, [user]);
 
   const saveTasks = (updated) => {
     setTasks(updated);
@@ -34,6 +52,8 @@ function App() {
   };
 
   const today = () => new Date().toISOString().split("T")[0];
+
+  /* ================= TASKS ================= */
 
   const addTask = () => {
     const trimmed = task.trim();
@@ -102,6 +122,8 @@ function App() {
     setEditingText("");
   };
 
+  /* ================= LOG ================= */
+
   const clearLogByDate = (date) => {
     if (!window.confirm("Clear entire day log?")) return;
     const updated = { ...log };
@@ -115,9 +137,7 @@ function App() {
     const updated = { ...log };
     updated[date] = updated[date].filter((_, i) => i !== itemIndex);
 
-    if (updated[date].length === 0) {
-      delete updated[date];
-    }
+    if (updated[date].length === 0) delete updated[date];
 
     saveLog(updated);
   };
@@ -134,7 +154,6 @@ function App() {
             autoFocus
             value={editingText}
             onChange={(e) => setEditingText(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === "Enter") saveEdit();
               if (e.key === "Escape") {
@@ -143,13 +162,7 @@ function App() {
               }
             }}
           />
-          <button
-            className="edit-save"
-            onClick={(e) => {
-              e.stopPropagation();
-              saveEdit();
-            }}
-          >
+          <button className="edit-save" onClick={saveEdit}>
             save
           </button>
         </>
@@ -159,6 +172,21 @@ function App() {
     return <span>{t.text}</span>;
   };
 
+  /* ================= LOGIN SCREEN ================= */
+
+  if (!user) {
+    return (
+      <div className="app" style={{ textAlign: "center" }}>
+        <h1 style={{ marginBottom: "40px" }}>Srya</h1>
+        <button className="primary" onClick={signInWithGoogle}>
+          Continue with Google
+        </button>
+      </div>
+    );
+  }
+
+  /* ================= MAIN APP ================= */
+
   return (
     <div className="app">
       <header className="header">
@@ -166,9 +194,13 @@ function App() {
           <span className="brand-icon">S</span>
           Srya
         </h1>
-        <span className="progress">
-          {completed.length} / {tasks.length}
-        </span>
+
+        <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
+          <span className="progress">
+            {completed.length} / {tasks.length}
+          </span>
+          <button onClick={logOut}>Logout</button>
+        </div>
       </header>
 
       <div className="input-row">
@@ -190,7 +222,7 @@ function App() {
         </button>
       </div>
 
-      {/* ================= PENDING ================= */}
+      {/* PENDING */}
       <section className="panel">
         <h3 className="section-title">Pending</h3>
 
@@ -199,55 +231,52 @@ function App() {
         )}
 
         <ul className="task-list">
-          {pending.map((t) => {
-            const i = tasks.indexOf(t);
-            return (
-              <li
-                key={i}
-                className="task-card"
-                onClick={() => toggleTask(i)}
-              >
-                <input
-                  type="checkbox"
-                  checked={t.completed}
-                  onChange={() => toggleTask(i)}
-                  onClick={(e) => e.stopPropagation()}
-                />
+          {pending.map((t, i) => (
+            <li
+              key={i}
+              className="task-card"
+              onClick={() => toggleTask(i)}
+            >
+              <input
+                type="checkbox"
+                checked={t.completed}
+                onChange={() => toggleTask(i)}
+                onClick={(e) => e.stopPropagation()}
+              />
 
-                <div className="task-text">
-                  {renderTaskText(t, i)}
-                </div>
+              <div className="task-text">
+                {renderTaskText(t, i)}
+              </div>
 
-                {editMode && (
-                  <>
-                    <button
-                      className="edit-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startEdit(i);
-                      }}
-                    >
-                      edit
-                    </button>
+              {editMode && (
+                <>
+                  <button
+                    className="edit-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEdit(i);
+                    }}
+                  >
+                    edit
+                  </button>
 
-                    <button
-                      className="danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteTask(i);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </>
-                )}
-              </li>
-            );
-          })}
+                  <button
+                    className="danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteTask(i);
+                    }}
+                  >
+                    ×
+                  </button>
+                </>
+              )}
+            </li>
+          ))}
         </ul>
       </section>
 
-      {/* ================= COMPLETED ================= */}
+      {/* COMPLETED */}
       <section className="panel">
         <h3 className="section-title muted">Completed</h3>
 
@@ -256,55 +285,52 @@ function App() {
         )}
 
         <ul className="task-list">
-          {completed.map((t) => {
-            const i = tasks.indexOf(t);
-            return (
-              <li
-                key={i}
-                className="task-card completed"
-                onClick={() => toggleTask(i)}
-              >
-                <input
-                  type="checkbox"
-                  checked
-                  onChange={() => toggleTask(i)}
-                  onClick={(e) => e.stopPropagation()}
-                />
+          {completed.map((t, i) => (
+            <li
+              key={i}
+              className="task-card completed"
+              onClick={() => toggleTask(i)}
+            >
+              <input
+                type="checkbox"
+                checked
+                onChange={() => toggleTask(i)}
+                onClick={(e) => e.stopPropagation()}
+              />
 
-                <div className="task-text">
-                  {renderTaskText(t, i)}
-                </div>
+              <div className="task-text">
+                {renderTaskText(t, i)}
+              </div>
 
-                {editMode && (
-                  <>
-                    <button
-                      className="edit-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startEdit(i);
-                      }}
-                    >
-                      edit
-                    </button>
+              {editMode && (
+                <>
+                  <button
+                    className="edit-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEdit(i);
+                    }}
+                  >
+                    edit
+                  </button>
 
-                    <button
-                      className="danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteTask(i);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </>
-                )}
-              </li>
-            );
-          })}
+                  <button
+                    className="danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteTask(i);
+                    }}
+                  >
+                    ×
+                  </button>
+                </>
+              )}
+            </li>
+          ))}
         </ul>
       </section>
 
-      {/* ================= LOG ================= */}
+      {/* LOG */}
       <div className="log-toggle">
         <button onClick={() => setShowLog(!showLog)}>
           {showLog ? "Hide Log" : "View Log"}
