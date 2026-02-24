@@ -2,19 +2,55 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import { auth, signInWithGoogle, logOut, db } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { db } from "./firebase";
+import { doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import {
   collection,
-  addDoc,
-  onSnapshot,
   doc,
-  updateDoc,
+  addDoc,
   deleteDoc,
-  query,
-  where,
-  getDocs,
-  setDoc
+  updateDoc,
+  setDoc,
+  onSnapshot,
+  arrayUnion
 } from "firebase/firestore";
 
+
+useEffect(() => {
+  if (!user) return;
+
+  // 🔹 TASK LISTENER
+  const tasksQuery = query(
+    collection(db, "users", user.uid, "tasks"),
+    orderBy("createdAt", "desc")
+  );
+
+  const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
+    const fetchedTasks = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    setTasks(fetchedTasks);
+  });
+
+  // 🔹 LOG LISTENER
+  const logsQuery = collection(db, "users", user.uid, "logs");
+
+  const unsubscribeLogs = onSnapshot(logsQuery, (snapshot) => {
+    const fetchedLogs = {};
+    snapshot.docs.forEach(doc => {
+      fetchedLogs[doc.id] = doc.data().entries || [];
+    });
+    setLog(fetchedLogs);
+  });
+
+  return () => {
+    unsubscribeTasks();
+    unsubscribeLogs();
+  };
+}, [user]);
 function App() {
   const [user, setUser] = useState(null);
 
@@ -38,64 +74,51 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  /* ================= REALTIME TASK LISTENER ================= */
+  /* ================= FETCH TASKS ================= */
 
   useEffect(() => {
     if (!user) return;
 
-    const q = collection(db, "users", user.uid, "tasks");
+    const tasksRef = collection(db, "users", user.uid, "tasks");
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const taskData = snapshot.docs.map((doc) => ({
+    const unsubscribe = onSnapshot(tasksRef, (snapshot) => {
+      const fetchedTasks = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
       }));
-      setTasks(taskData);
+      setTasks(fetchedTasks);
     });
 
     return () => unsubscribe();
   }, [user]);
 
-  /* ================= REALTIME LOG LISTENER ================= */
+  /* ================= FETCH LOGS ================= */
 
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  const logsRef = collection(db, "users", user.uid, "logs");
+    const logsRef = collection(db, "users", user.uid, "logs");
 
-  const unsubscribe = onSnapshot(logsRef, (snapshot) => {
-    const rebuiltLogs = {};
-
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      rebuiltLogs[doc.id] = data.entries || [];
+    const unsubscribe = onSnapshot(logsRef, (snapshot) => {
+      const rebuiltLogs = {};
+      snapshot.forEach((doc) => {
+        rebuiltLogs[doc.id] = doc.data().entries || [];
+      });
+      setLog(rebuiltLogs);
     });
 
-    setLog(rebuiltLogs);
-  });
-
-  return () => unsubscribe();
-}, [user]);
+    return () => unsubscribe();
+  }, [user]);
 
   /* ================= ADD TASK ================= */
 
   const addTask = async () => {
-    const trimmed = task.trim();
-    if (!trimmed || !user) return;
+    if (!task.trim() || !user) return;
 
-    const q = query(
-      collection(db, "users", user.uid, "tasks"),
-      where("text", "==", trimmed)
-    );
+    const tasksRef = collection(db, "users", user.uid, "tasks");
 
-    const existing = await getDocs(q);
-    if (!existing.empty) {
-      alert("Task already exists.");
-      return;
-    }
-
-    await addDoc(collection(db, "users", user.uid, "tasks"), {
-      text: trimmed,
+    await addDoc(tasksRef, {
+      text: task.trim(),
       completed: false,
       createdAt: new Date().toISOString(),
       completedAt: null
@@ -107,76 +130,74 @@ function App() {
   /* ================= TOGGLE TASK ================= */
 
   const toggleTask = async (taskItem) => {
-  if (!user) return;
+    if (!user) return;
 
-  const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
+    const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
+    const updatedCompleted = !taskItem.completed;
 
-  const updatedCompleted = !taskItem.completed;
+    await updateDoc(taskRef, {
+      completed: updatedCompleted,
+      completedAt: updatedCompleted ? new Date().toISOString() : null
+    });
 
-  await updateDoc(taskRef, {
-    completed: updatedCompleted,
-    completedAt: updatedCompleted ? new Date().toISOString() : null
-  });
+    if (updatedCompleted) {
+      const logRef = doc(db, "users", user.uid, "logs", today());
 
-  if (updatedCompleted) {
-    const date = today();
-    const logRef = doc(db, "users", user.uid, "logs", date);
-
-    const existing = log[date] || [];
-
-    if (!existing.includes(taskItem.text)) {
       await setDoc(
         logRef,
-        { entries: [...existing, taskItem.text] },
+        {
+          entries: arrayUnion(taskItem.text)
+        },
         { merge: true }
       );
     }
-  }
-};
+  };
 
   /* ================= DELETE TASK ================= */
 
-  const deleteTask = async (taskId) => {
-    if (!window.confirm("Delete this task?") || !user) return;
-
-    await deleteDoc(doc(db, "users", user.uid, "tasks", taskId));
+  const deleteTask = async (id) => {
+    if (!window.confirm("Delete this task?")) return;
+    await deleteDoc(doc(db, "users", user.uid, "tasks", id));
   };
 
   /* ================= EDIT TASK ================= */
 
-  const saveEdit = async () => {
-    if (!editingText.trim() || !user) return;
+  const startEdit = (taskItem) => {
+    setEditingId(taskItem.id);
+    setEditingText(taskItem.text);
+  };
 
-    await updateDoc(
-      doc(db, "users", user.uid, "tasks", editingId),
-      { text: editingText.trim() }
-    );
+  const saveEdit = async () => {
+    if (!editingText.trim()) return;
+
+    const taskRef = doc(db, "users", user.uid, "tasks", editingId);
+
+    await updateDoc(taskRef, {
+      text: editingText.trim()
+    });
 
     setEditingId(null);
     setEditingText("");
   };
 
-  /* ================= LOG FUNCTIONS ================= */
-
-  const clearLogByDate = async (date) => {
-    if (!window.confirm("Clear entire day log?") || !user) return;
-    await deleteDoc(doc(db, "users", user.uid, "logs", date));
-  };
+  /* ================= DELETE LOG ITEM ================= */
 
   const deleteLogItem = async (date, index) => {
-    if (!window.confirm("Delete this log entry?") || !user) return;
+    if (!window.confirm("Delete this log entry?")) return;
 
-    const updated = [...log[date]];
-    updated.splice(index, 1);
+    const updatedEntries = log[date].filter((_, i) => i !== index);
 
     const logRef = doc(db, "users", user.uid, "logs", date);
 
-    if (updated.length === 0) {
+    await setDoc(logRef, { entries: updatedEntries });
+
+    if (updatedEntries.length === 0) {
       await deleteDoc(logRef);
-    } else {
-      await updateDoc(logRef, { entries: updated });
     }
   };
+
+  const pending = tasks.filter((t) => !t.completed);
+  const completed = tasks.filter((t) => t.completed);
 
   /* ================= LOGIN SCREEN ================= */
 
@@ -191,10 +212,7 @@ function App() {
     );
   }
 
-  const pending = tasks.filter((t) => !t.completed);
-  const completed = tasks.filter((t) => t.completed);
-
-  /* ================= MAIN UI ================= */
+  /* ================= MAIN APP ================= */
 
   return (
     <div className="app">
@@ -214,7 +232,6 @@ function App() {
 
       <div className="input-row">
         <input
-          type="text"
           value={task}
           onChange={(e) => setTask(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addTask()}
@@ -247,6 +264,7 @@ function App() {
                 onChange={() => toggleTask(t)}
                 onClick={(e) => e.stopPropagation()}
               />
+
               <div className="task-text">
                 {editingId === t.id ? (
                   <>
@@ -261,7 +279,7 @@ function App() {
                     </button>
                   </>
                 ) : (
-                  t.text
+                  <span>{t.text}</span>
                 )}
               </div>
 
@@ -271,13 +289,11 @@ function App() {
                     className="edit-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setEditingId(t.id);
-                      setEditingText(t.text);
+                      startEdit(t);
                     }}
                   >
                     edit
                   </button>
-
                   <button
                     className="danger"
                     onClick={(e) => {
@@ -296,7 +312,7 @@ function App() {
 
       {/* COMPLETED */}
       <section className="panel">
-        <h3 className="section-title muted">Completed</h3>
+        <h3 className="section-title">Completed</h3>
         <ul className="task-list">
           {completed.map((t) => (
             <li
@@ -316,7 +332,7 @@ function App() {
         </ul>
       </section>
 
-      {/* LOG */}
+      {/* LOGS */}
       <div className="log-toggle">
         <button onClick={() => setShowLog(!showLog)}>
           {showLog ? "Hide Log" : "View Log"}
@@ -332,30 +348,17 @@ function App() {
               .reverse()
               .map((d) => (
                 <li key={d} className="log-day">
-                  <div className="log-day-header">
-                    <strong>{d}</strong>
-                    {editMode && (
-                      <button
-                        className="danger"
-                        onClick={() => clearLogByDate(d)}
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-
+                  <strong>{d}</strong>
                   <ul>
                     {log[d].map((item, i) => (
                       <li key={i} className="log-item">
                         {item}
-                        {editMode && (
-                          <button
-                            className="danger"
-                            onClick={() => deleteLogItem(d, i)}
-                          >
-                            ×
-                          </button>
-                        )}
+                        <button
+                          className="danger"
+                          onClick={() => deleteLogItem(d, i)}
+                        >
+                          ×
+                        </button>
                       </li>
                     ))}
                   </ul>
