@@ -67,28 +67,23 @@ function App() {
   }, [user]);
 
       const addTask = async () => {
-    if (!task.trim() || !user) return;
+        if (!task.trim() || !user) return;
 
-    const trimmed = task.trim().toLowerCase();
-    const tasksRef = collection(db, "users", user.uid, "tasks");
+        const trimmed = task.trim().toLowerCase();
+        const taskRef = doc(db, "users", user.uid, "tasks", trimmed);
 
-    const snapshot = await getDocs(tasksRef);
+        const existing = await getDoc(taskRef);
+        if (existing.exists()) return;
 
-    const exists = snapshot.docs.some(
-      (d) => d.data().text.toLowerCase() === trimmed
-    );
+        await setDoc(taskRef, {
+          text: task.trim(),
+          completed: false,
+          createdAt: serverTimestamp(),
+          completedAt: null
+        });
 
-    if (exists) return;
-
-    await addDoc(tasksRef, {
-      text: task.trim(),
-      completed: false,
-      createdAt: serverTimestamp(),
-      completedAt: null
-    });
-
-    setTask("");
-  };
+        setTask("");
+      };
 
   const toggleTask = async (taskItem) => {
   if (!user) return;
