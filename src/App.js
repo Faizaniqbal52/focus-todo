@@ -90,14 +90,14 @@ function App() {
     });
 
     if (newState) {
-      const logRef = doc(db, "users", user.uid, "logs", today());
+  const logRef = doc(db, "users", user.uid, "logs", today());
 
-      await setDoc(
-        logRef,
-        { entries: arrayUnion(taskItem.text) },
-        { merge: true }
-      );
-    }
+  const existingEntries = log[today()] || [];
+
+  await setDoc(logRef, {
+    entries: [...existingEntries, taskItem.text]
+  });
+}
   };
 
   const deleteTask = async (id) => {
