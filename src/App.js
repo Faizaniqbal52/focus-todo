@@ -113,16 +113,17 @@ function App() {
   };
 
   const saveEdit = async () => {
-    if (!editingText.trim() || !user) return;
+  if (!editingText.trim() || !user || !editingId) return;
 
-    await updateDoc(
-      doc(db, "users", user.uid, "tasks", editingId),
-      { text: editingText.trim() }
-    );
+  const ref = doc(db, "users", user.uid, "tasks", editingId);
 
-    setEditingId(null);
-    setEditingText("");
-  };
+  await updateDoc(ref, {
+    text: editingText.trim()
+  });
+
+  setEditingId(null);
+  setEditingText("");
+};
 
   const deleteLogItem = async (date, index) => {
     if (!window.confirm("Delete this log entry?")) return;
@@ -274,33 +275,35 @@ function App() {
       </div>
 
       {showLog && (
-        <section className="panel log-section">
-          <h3 className="section-title">Daily Log</h3>
-          <ul>
-            {Object.keys(log)
-              .sort()
-              .reverse()
-              .map((d) => (
-                <li key={d} className="log-day">
-                  <strong>{d}</strong>
-                  <ul>
-                    {log[d].map((item, i) => (
-                      <li key={i} className="log-item">
-                        {item}
-                        <button
-                          className="danger"
-                          onClick={() => deleteLogItem(d, i)}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
+          <section className="panel log-section">
+            <h3 className="section-title">Daily Log</h3>
+            <ul>
+              {Object.keys(log)
+                .sort()
+                .reverse()
+                .map((d) => (
+                  <li key={d} className="log-day">
+                    <strong>{d}</strong>
+                    <ul>
+                      {log[d].map((item, i) => (
+                        <li key={i} className="log-item">
+                          {item}
+                          {editMode && (
+                            <button
+                              className="danger"
+                              onClick={() => deleteLogItem(d, i)}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        )}
     </div>
   );
 }
