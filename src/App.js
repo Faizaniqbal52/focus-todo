@@ -6,6 +6,7 @@ import {
   collection,
   doc,
   addDoc,
+  getDocs,
   deleteDoc,
   updateDoc,
   setDoc,
@@ -65,18 +66,21 @@ function App() {
     return () => unsub();
   }, [user]);
 
-    const addTask = async () => {
+      const addTask = async () => {
     if (!task.trim() || !user) return;
 
     const trimmed = task.trim().toLowerCase();
+    const tasksRef = collection(db, "users", user.uid, "tasks");
 
-    const exists = tasks.some(
-      (t) => t.text.toLowerCase() === trimmed
+    const snapshot = await getDocs(tasksRef);
+
+    const exists = snapshot.docs.some(
+      (d) => d.data().text.toLowerCase() === trimmed
     );
 
     if (exists) return;
 
-    await addDoc(collection(db, "users", user.uid, "tasks"), {
+    await addDoc(tasksRef, {
       text: task.trim(),
       completed: false,
       createdAt: serverTimestamp(),
