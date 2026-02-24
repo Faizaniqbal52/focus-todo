@@ -5,8 +5,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   doc,
-  addDoc,
-  getDocs,
   deleteDoc,
   updateDoc,
   setDoc,
@@ -16,6 +14,7 @@ import {
   arrayUnion,
   serverTimestamp
 } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -66,7 +65,7 @@ function App() {
     return () => unsub();
   }, [user]);
 
-        const addTask = async () => {
+    const addTask = async () => {
     if (!task.trim() || !user) return;
 
     const trimmed = task.trim();
