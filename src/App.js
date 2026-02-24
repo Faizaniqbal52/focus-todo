@@ -180,7 +180,7 @@ function App() {
       </div>
 
       <div className="log-toggle">
-        <button onClick={() => setEditMode(!editMode)}>
+        <button onClick={() => setEditMode((prev) => !prev)}>
           {editMode ? "Done Editing" : "Edit Tasks"}
         </button>
       </div>
