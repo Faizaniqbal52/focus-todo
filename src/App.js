@@ -65,8 +65,16 @@ function App() {
     return () => unsub();
   }, [user]);
 
-  const addTask = async () => {
+    const addTask = async () => {
     if (!task.trim() || !user) return;
+
+    const trimmed = task.trim().toLowerCase();
+
+    const exists = tasks.some(
+      (t) => t.text.toLowerCase() === trimmed
+    );
+
+    if (exists) return;
 
     await addDoc(collection(db, "users", user.uid, "tasks"), {
       text: task.trim(),
@@ -233,13 +241,11 @@ function App() {
                   </button>
                   <button
                     className="danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteTask(t.id);
-                    }}
+                    onClick={() => deleteLogItem(d, i)}
                   >
                     ×
                   </button>
+
                 </>
               )}
             </li>
