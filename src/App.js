@@ -12,9 +12,9 @@ import {
   query,
   orderBy,
   arrayUnion,
-  serverTimestamp
+  serverTimestamp,
+  getDoc
 } from "firebase/firestore";
-import { doc, setDoc } from "firebase/firestore";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -240,11 +240,13 @@ function App() {
                   </button>
                   <button
                     className="danger"
-                    onClick={() => deleteLogItem(d, i)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteTask(t.id);
+                    }}
                   >
                     ×
                   </button>
-
                 </>
               )}
             </li>
