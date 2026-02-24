@@ -27,16 +27,12 @@ function App() {
 
   const today = () => new Date().toISOString().split("T")[0];
 
-  /* ================= AUTH ================= */
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
   }, []);
-
-  /* ================= FETCH TASKS ================= */
 
   useEffect(() => {
     if (!user) return;
@@ -57,8 +53,6 @@ function App() {
     return () => unsubscribe();
   }, [user]);
 
-  /* ================= FETCH LOGS ================= */
-
   useEffect(() => {
     if (!user) return;
 
@@ -75,8 +69,6 @@ function App() {
     return () => unsubscribe();
   }, [user]);
 
-  /* ================= ADD TASK ================= */
-
   const addTask = async () => {
     if (!task.trim() || !user) return;
 
@@ -91,8 +83,6 @@ function App() {
 
     setTask("");
   };
-
-  /* ================= TOGGLE TASK ================= */
 
   const toggleTask = async (taskItem) => {
     if (!user) return;
@@ -110,22 +100,16 @@ function App() {
 
       await setDoc(
         logRef,
-        {
-          entries: arrayUnion(taskItem.text)
-        },
+        { entries: arrayUnion(taskItem.text) },
         { merge: true }
       );
     }
   };
 
-  /* ================= DELETE TASK ================= */
-
   const deleteTask = async (id) => {
     if (!window.confirm("Delete this task?")) return;
     await deleteDoc(doc(db, "users", user.uid, "tasks", id));
   };
-
-  /* ================= EDIT TASK ================= */
 
   const startEdit = (taskItem) => {
     setEditingId(taskItem.id);
@@ -145,8 +129,6 @@ function App() {
     setEditingText("");
   };
 
-  /* ================= DELETE LOG ITEM ================= */
-
   const deleteLogItem = async (date, index) => {
     if (!window.confirm("Delete this log entry?")) return;
 
@@ -163,8 +145,6 @@ function App() {
   const pending = tasks.filter((t) => !t.completed);
   const completed = tasks.filter((t) => t.completed);
 
-  /* ================= LOGIN SCREEN ================= */
-
   if (!user) {
     return (
       <div className="app" style={{ textAlign: "center" }}>
@@ -176,8 +156,6 @@ function App() {
     );
   }
 
-  /* ================= MAIN APP ================= */
-
   return (
     <div className="app">
       <header className="header">
@@ -185,7 +163,6 @@ function App() {
           <span className="brand-icon">S</span>
           Srya
         </h1>
-
         <div style={{ display: "flex", gap: "15px", alignItems: "center" }}>
           <span className="progress">
             {completed.length} / {tasks.length}
@@ -236,7 +213,13 @@ function App() {
                       value={editingText}
                       onChange={(e) => setEditingText(e.target.value)}
                     />
-                    <button className="edit-save" onClick={saveEdit}>
+                    <button
+                      className="edit-save"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        saveEdit();
+                      }}
+                    >
                       save
                     </button>
                   </>
@@ -292,6 +275,41 @@ function App() {
           ))}
         </ul>
       </section>
+
+      <div className="log-toggle">
+        <button onClick={() => setShowLog(!showLog)}>
+          {showLog ? "Hide Log" : "View Log"}
+        </button>
+      </div>
+
+      {showLog && (
+        <section className="panel log-section">
+          <h3 className="section-title">Daily Log</h3>
+          <ul>
+            {Object.keys(log)
+              .sort()
+              .reverse()
+              .map((d) => (
+                <li key={d} className="log-day">
+                  <strong>{d}</strong>
+                  <ul>
+                    {log[d].map((item, i) => (
+                      <li key={i} className="log-item">
+                        {item}
+                        <button
+                          className="danger"
+                          onClick={() => deleteLogItem(d, i)}
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
