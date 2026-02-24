@@ -59,20 +59,23 @@ function App() {
   /* ================= REALTIME LOG LISTENER ================= */
 
   useEffect(() => {
-    if (!user) return;
+  if (!user) return;
 
-    const q = collection(db, "users", user.uid, "logs");
+  const logsRef = collection(db, "users", user.uid, "logs");
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const logData = {};
-      snapshot.docs.forEach((doc) => {
-        logData[doc.id] = doc.data().entries || [];
-      });
-      setLog(logData);
+  const unsubscribe = onSnapshot(logsRef, (snapshot) => {
+    const rebuiltLogs = {};
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      rebuiltLogs[doc.id] = data.entries || [];
     });
 
-    return () => unsubscribe();
-  }, [user]);
+    setLog(rebuiltLogs);
+  });
+
+  return () => unsubscribe();
+}, [user]);
 
   /* ================= ADD TASK ================= */
 
@@ -104,31 +107,32 @@ function App() {
   /* ================= TOGGLE TASK ================= */
 
   const toggleTask = async (taskItem) => {
-    if (!user) return;
+  if (!user) return;
 
-    const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
+  const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
 
-    const updatedCompleted = !taskItem.completed;
+  const updatedCompleted = !taskItem.completed;
 
-    await updateDoc(taskRef, {
-      completed: updatedCompleted,
-      completedAt: updatedCompleted ? new Date().toISOString() : null
-    });
+  await updateDoc(taskRef, {
+    completed: updatedCompleted,
+    completedAt: updatedCompleted ? new Date().toISOString() : null
+  });
 
-    if (updatedCompleted) {
-      const date = today();
-      const logRef = doc(db, "users", user.uid, "logs", date);
+  if (updatedCompleted) {
+    const date = today();
+    const logRef = doc(db, "users", user.uid, "logs", date);
 
-      const existing = log[date] || [];
-      if (!existing.includes(taskItem.text)) {
-        await setDoc(
-          logRef,
-          { entries: [...existing, taskItem.text] },
-          { merge: true }
-        );
-      }
+    const existing = log[date] || [];
+
+    if (!existing.includes(taskItem.text)) {
+      await setDoc(
+        logRef,
+        { entries: [...existing, taskItem.text] },
+        { merge: true }
+      );
     }
-  };
+  }
+};
 
   /* ================= DELETE TASK ================= */
 
