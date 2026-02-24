@@ -12,7 +12,8 @@ import {
   onSnapshot,
   query,
   orderBy,
-  arrayUnion
+  arrayUnion,
+  serverTimestamp
 } from "firebase/firestore";
 
 function App() {
@@ -28,56 +29,49 @@ function App() {
   const today = () => new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
   }, []);
 
   useEffect(() => {
     if (!user) return;
 
-    const tasksQuery = query(
+    const q = query(
       collection(db, "users", user.uid, "tasks"),
       orderBy("createdAt", "desc")
     );
 
-    const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
-      const fetchedTasks = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setTasks(fetchedTasks);
+    const unsub = onSnapshot(q, (snap) => {
+      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setTasks(data);
     });
 
-    return () => unsubscribe();
+    return () => unsub();
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
 
-    const logsRef = collection(db, "users", user.uid, "logs");
+    const ref = collection(db, "users", user.uid, "logs");
 
-    const unsubscribe = onSnapshot(logsRef, (snapshot) => {
-      const rebuiltLogs = {};
-      snapshot.forEach((doc) => {
-        rebuiltLogs[doc.id] = doc.data().entries || [];
+    const unsub = onSnapshot(ref, (snap) => {
+      const rebuilt = {};
+      snap.forEach((d) => {
+        rebuilt[d.id] = d.data().entries || [];
       });
-      setLog(rebuiltLogs);
+      setLog(rebuilt);
     });
 
-    return () => unsubscribe();
+    return () => unsub();
   }, [user]);
 
   const addTask = async () => {
     if (!task.trim() || !user) return;
 
-    const tasksRef = collection(db, "users", user.uid, "tasks");
-
-    await addDoc(tasksRef, {
+    await addDoc(collection(db, "users", user.uid, "tasks"), {
       text: task.trim(),
       completed: false,
-      createdAt: new Date().toISOString(),
+      createdAt: serverTimestamp(),
       completedAt: null
     });
 
@@ -87,15 +81,15 @@ function App() {
   const toggleTask = async (taskItem) => {
     if (!user) return;
 
-    const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
-    const updatedCompleted = !taskItem.completed;
+    const ref = doc(db, "users", user.uid, "tasks", taskItem.id);
+    const newState = !taskItem.completed;
 
-    await updateDoc(taskRef, {
-      completed: updatedCompleted,
-      completedAt: updatedCompleted ? new Date().toISOString() : null
+    await updateDoc(ref, {
+      completed: newState,
+      completedAt: newState ? serverTimestamp() : null
     });
 
-    if (updatedCompleted) {
+    if (newState) {
       const logRef = doc(db, "users", user.uid, "logs", today());
 
       await setDoc(
@@ -111,19 +105,18 @@ function App() {
     await deleteDoc(doc(db, "users", user.uid, "tasks", id));
   };
 
-  const startEdit = (taskItem) => {
-    setEditingId(taskItem.id);
-    setEditingText(taskItem.text);
+  const startEdit = (t) => {
+    setEditingId(t.id);
+    setEditingText(t.text);
   };
 
   const saveEdit = async () => {
-    if (!editingText.trim()) return;
+    if (!editingText.trim() || !user) return;
 
-    const taskRef = doc(db, "users", user.uid, "tasks", editingId);
-
-    await updateDoc(taskRef, {
-      text: editingText.trim()
-    });
+    await updateDoc(
+      doc(db, "users", user.uid, "tasks", editingId),
+      { text: editingText.trim() }
+    );
 
     setEditingId(null);
     setEditingText("");
@@ -132,13 +125,13 @@ function App() {
   const deleteLogItem = async (date, index) => {
     if (!window.confirm("Delete this log entry?")) return;
 
-    const updatedEntries = log[date].filter((_, i) => i !== index);
-    const logRef = doc(db, "users", user.uid, "logs", date);
+    const updated = log[date].filter((_, i) => i !== index);
+    const ref = doc(db, "users", user.uid, "logs", date);
 
-    if (updatedEntries.length === 0) {
-      await deleteDoc(logRef);
+    if (updated.length === 0) {
+      await deleteDoc(ref);
     } else {
-      await setDoc(logRef, { entries: updatedEntries });
+      await setDoc(ref, { entries: updated });
     }
   };
 
@@ -193,11 +186,7 @@ function App() {
         <h3 className="section-title">Pending</h3>
         <ul className="task-list">
           {pending.map((t) => (
-            <li
-              key={t.id}
-              className="task-card"
-              onClick={() => toggleTask(t)}
-            >
+            <li key={t.id} className="task-card" onClick={() => toggleTask(t)}>
               <input
                 type="checkbox"
                 checked={t.completed}
