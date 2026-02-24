@@ -2,10 +2,6 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import { auth, signInWithGoogle, logOut, db } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import { db } from "./firebase";
-import { doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import {
   collection,
   doc,
@@ -14,52 +10,18 @@ import {
   updateDoc,
   setDoc,
   onSnapshot,
+  query,
+  orderBy,
   arrayUnion
 } from "firebase/firestore";
 
-
-useEffect(() => {
-  if (!user) return;
-
-  // 🔹 TASK LISTENER
-  const tasksQuery = query(
-    collection(db, "users", user.uid, "tasks"),
-    orderBy("createdAt", "desc")
-  );
-
-  const unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
-    const fetchedTasks = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    setTasks(fetchedTasks);
-  });
-
-  // 🔹 LOG LISTENER
-  const logsQuery = collection(db, "users", user.uid, "logs");
-
-  const unsubscribeLogs = onSnapshot(logsQuery, (snapshot) => {
-    const fetchedLogs = {};
-    snapshot.docs.forEach(doc => {
-      fetchedLogs[doc.id] = doc.data().entries || [];
-    });
-    setLog(fetchedLogs);
-  });
-
-  return () => {
-    unsubscribeTasks();
-    unsubscribeLogs();
-  };
-}, [user]);
 function App() {
   const [user, setUser] = useState(null);
-
   const [task, setTask] = useState("");
   const [tasks, setTasks] = useState([]);
   const [log, setLog] = useState({});
   const [showLog, setShowLog] = useState(false);
   const [editMode, setEditMode] = useState(false);
-
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
 
@@ -79,9 +41,12 @@ function App() {
   useEffect(() => {
     if (!user) return;
 
-    const tasksRef = collection(db, "users", user.uid, "tasks");
+    const tasksQuery = query(
+      collection(db, "users", user.uid, "tasks"),
+      orderBy("createdAt", "desc")
+    );
 
-    const unsubscribe = onSnapshot(tasksRef, (snapshot) => {
+    const unsubscribe = onSnapshot(tasksQuery, (snapshot) => {
       const fetchedTasks = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
@@ -186,13 +151,12 @@ function App() {
     if (!window.confirm("Delete this log entry?")) return;
 
     const updatedEntries = log[date].filter((_, i) => i !== index);
-
     const logRef = doc(db, "users", user.uid, "logs", date);
-
-    await setDoc(logRef, { entries: updatedEntries });
 
     if (updatedEntries.length === 0) {
       await deleteDoc(logRef);
+    } else {
+      await setDoc(logRef, { entries: updatedEntries });
     }
   };
 
@@ -248,7 +212,6 @@ function App() {
         </button>
       </div>
 
-      {/* PENDING */}
       <section className="panel">
         <h3 className="section-title">Pending</h3>
         <ul className="task-list">
@@ -264,7 +227,6 @@ function App() {
                 onChange={() => toggleTask(t)}
                 onClick={(e) => e.stopPropagation()}
               />
-
               <div className="task-text">
                 {editingId === t.id ? (
                   <>
@@ -310,7 +272,6 @@ function App() {
         </ul>
       </section>
 
-      {/* COMPLETED */}
       <section className="panel">
         <h3 className="section-title">Completed</h3>
         <ul className="task-list">
@@ -331,42 +292,6 @@ function App() {
           ))}
         </ul>
       </section>
-
-      {/* LOGS */}
-      <div className="log-toggle">
-        <button onClick={() => setShowLog(!showLog)}>
-          {showLog ? "Hide Log" : "View Log"}
-        </button>
-      </div>
-
-      {showLog && (
-        <section className="panel log-section">
-          <h3 className="section-title">Daily Log</h3>
-          <ul>
-            {Object.keys(log)
-              .sort()
-              .reverse()
-              .map((d) => (
-                <li key={d} className="log-day">
-                  <strong>{d}</strong>
-                  <ul>
-                    {log[d].map((item, i) => (
-                      <li key={i} className="log-item">
-                        {item}
-                        <button
-                          className="danger"
-                          onClick={() => deleteLogItem(d, i)}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
     </div>
   );
 }
