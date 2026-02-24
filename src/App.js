@@ -79,26 +79,28 @@ function App() {
   };
 
   const toggleTask = async (taskItem) => {
-    if (!user) return;
+  if (!user) return;
 
-    const ref = doc(db, "users", user.uid, "tasks", taskItem.id);
-    const newState = !taskItem.completed;
+  const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
+  const newState = !taskItem.completed;
 
-    await updateDoc(ref, {
-      completed: newState,
-      completedAt: newState ? serverTimestamp() : null
-    });
-
-    if (newState) {
-  const logRef = doc(db, "users", user.uid, "logs", today());
-
-  const existingEntries = log[today()] || [];
-
-  await setDoc(logRef, {
-    entries: [...existingEntries, taskItem.text]
+  await updateDoc(taskRef, {
+    completed: newState,
+    completedAt: newState ? serverTimestamp() : null
   });
-}
-  };
+
+  if (newState) {
+    const logRef = doc(db, "users", user.uid, "logs", today());
+
+    await setDoc(
+      logRef,
+      {
+        entries: arrayUnion(taskItem.text)
+      },
+      { merge: true }
+    );
+  }
+};
 
   const deleteTask = async (id) => {
     if (!window.confirm("Delete this task?")) return;
