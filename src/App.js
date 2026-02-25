@@ -13,7 +13,6 @@ import {
   orderBy,
   arrayUnion,
   serverTimestamp,
-  getDoc
 } from "firebase/firestore";
 
 function App() {
