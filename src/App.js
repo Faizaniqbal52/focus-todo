@@ -69,26 +69,50 @@ function App() {
   }, [user]);
 
   // ✅ ADDED: voice recognition function
-  const startListening = () => {
+    const startListening = () => {
     const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+      window.webkitSpeechRecognition || window.SpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("Speech recognition not supported in this browser");
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
+  // If already listening → stop it
+    if (listening && window._recognitionInstance) {
+      window._recognitionInstance.stop();
+      return;
+    }
 
-    recognition.start();
-    setListening(true);
+    const recognition = new SpeechRecognition();
+
+    // Store globally so we can stop it manually
+    window._recognitionInstance = recognition;
+
+    recognition.lang = "en-US";
+    recognition.interimResults = true;     
+    recognition.continuous = true;         
+
+    let finalTranscript = "";
+
+    recognition.onstart = () => {
+      setListening(true);
+    };
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setTask(transcript);
-      setListening(false);
+      let interimTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + " ";
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      setTask((finalTranscript + interimTranscript).trim());
     };
 
     recognition.onerror = () => {
@@ -97,7 +121,10 @@ function App() {
 
     recognition.onend = () => {
       setListening(false);
+      window._recognitionInstance = null;
     };
+
+    recognition.start();
   };
 
   const addTask = async () => {
@@ -216,8 +243,11 @@ function App() {
         />
 
         {/* ✅ ADDED: mic button */}
-        <button onClick={startListening}>
-          {listening ? "Listening..." : "🎤"}
+        <button
+          onClick={startListening}
+          className={`mic-btn ${listening ? "active" : ""}`}
+        >
+          {listening ? "🛑 Stop" : "🎙 Speak"}
         </button>
 
         <button className="primary" onClick={addTask}>
