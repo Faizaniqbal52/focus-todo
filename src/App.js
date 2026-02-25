@@ -12,7 +12,7 @@ import {
   query,
   orderBy,
   arrayUnion,
-  serverTimestamp,
+  serverTimestamp
 } from "firebase/firestore";
 
 function App() {
