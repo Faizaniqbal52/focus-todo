@@ -26,6 +26,9 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
 
+  // ✅ ADDED: voice listening state
+  const [listening, setListening] = useState(false);
+
   const today = () => new Date().toISOString().split("T")[0];
 
   useEffect(() => {
@@ -65,16 +68,45 @@ function App() {
     return () => unsub();
   }, [user]);
 
-    const addTask = async () => {
+  // ✅ ADDED: voice recognition function
+  const startListening = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in this browser");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    recognition.start();
+    setListening(true);
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setTask(transcript);
+      setListening(false);
+    };
+
+    recognition.onerror = () => {
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+  };
+
+  const addTask = async () => {
     if (!task.trim() || !user) return;
 
     const trimmed = task.trim();
     const docId = trimmed.toLowerCase();
 
     const taskRef = doc(db, "users", user.uid, "tasks", docId);
-
-    const existing = await getDoc(taskRef);
-    if (existing.exists()) return;
 
     await setDoc(taskRef, {
       text: trimmed,
@@ -85,29 +117,30 @@ function App() {
 
     setTask("");
   };
+
   const toggleTask = async (taskItem) => {
-  if (!user) return;
+    if (!user) return;
 
-  const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
-  const newState = !taskItem.completed;
+    const taskRef = doc(db, "users", user.uid, "tasks", taskItem.id);
+    const newState = !taskItem.completed;
 
-  await updateDoc(taskRef, {
-    completed: newState,
-    completedAt: newState ? serverTimestamp() : null
-  });
+    await updateDoc(taskRef, {
+      completed: newState,
+      completedAt: newState ? serverTimestamp() : null
+    });
 
-  if (newState) {
-    const logRef = doc(db, "users", user.uid, "logs", today());
+    if (newState) {
+      const logRef = doc(db, "users", user.uid, "logs", today());
 
-    await setDoc(
-      logRef,
-      {
-        entries: arrayUnion(taskItem.text)
-      },
-      { merge: true }
-    );
-  }
-};
+      await setDoc(
+        logRef,
+        {
+          entries: arrayUnion(taskItem.text)
+        },
+        { merge: true }
+      );
+    }
+  };
 
   const deleteTask = async (id) => {
     if (!window.confirm("Delete this task?")) return;
@@ -120,17 +153,17 @@ function App() {
   };
 
   const saveEdit = async () => {
-  if (!editingText.trim() || !user || !editingId) return;
+    if (!editingText.trim() || !user || !editingId) return;
 
-  const ref = doc(db, "users", user.uid, "tasks", editingId);
+    const ref = doc(db, "users", user.uid, "tasks", editingId);
 
-  await updateDoc(ref, {
-    text: editingText.trim()
-  });
+    await updateDoc(ref, {
+      text: editingText.trim()
+    });
 
-  setEditingId(null);
-  setEditingText("");
-};
+    setEditingId(null);
+    setEditingText("");
+  };
 
   const deleteLogItem = async (date, index) => {
     if (!window.confirm("Delete this log entry?")) return;
@@ -181,6 +214,12 @@ function App() {
           onKeyDown={(e) => e.key === "Enter" && addTask()}
           placeholder="What needs to be done?"
         />
+
+        {/* ✅ ADDED: mic button */}
+        <button onClick={startListening}>
+          {listening ? "Listening..." : "🎤"}
+        </button>
+
         <button className="primary" onClick={addTask}>
           Add
         </button>
@@ -282,35 +321,35 @@ function App() {
       </div>
 
       {showLog && (
-          <section className="panel log-section">
-            <h3 className="section-title">Daily Log</h3>
-            <ul>
-              {Object.keys(log)
-                .sort()
-                .reverse()
-                .map((d) => (
-                  <li key={d} className="log-day">
-                    <strong>{d}</strong>
-                    <ul>
-                      {log[d].map((item, i) => (
-                        <li key={i} className="log-item">
-                          {item}
-                          {editMode && (
-                            <button
-                              className="danger"
-                              onClick={() => deleteLogItem(d, i)}
-                            >
-                              ×
-                            </button>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-            </ul>
-          </section>
-        )}
+        <section className="panel log-section">
+          <h3 className="section-title">Daily Log</h3>
+          <ul>
+            {Object.keys(log)
+              .sort()
+              .reverse()
+              .map((d) => (
+                <li key={d} className="log-day">
+                  <strong>{d}</strong>
+                  <ul>
+                    {log[d].map((item, i) => (
+                      <li key={i} className="log-item">
+                        {item}
+                        {editMode && (
+                          <button
+                            className="danger"
+                            onClick={() => deleteLogItem(d, i)}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
