@@ -35,7 +35,7 @@ function InnerApp() {
     <div className="app login-screen">
       <div className="login-card">
         <img
-          src="/Srya logo.png"
+          src="/Srya-logo.png"
           alt="Srya Logo"
           className="brand-logo"
         />

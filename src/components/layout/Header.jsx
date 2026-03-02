@@ -23,7 +23,7 @@ export default function Header() {
     <header className="header">
       <div className="header-left">
         <img
-          src="/Srya logo.png"
+          src="/Srya-logo.png"
           alt="Srya Logo"
           className="brand-logo"
         />
