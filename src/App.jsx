@@ -10,7 +10,7 @@ import CompletedList from './components/tasks/CompletedList';
 import LogPanel from './components/logs/LogPanel';
 import useAuth from './hooks/useAuth';
 import useToast from './hooks/useToast';
-import logo from "../../assets/srya-logo.png";
+import logo from "./assets/srya-logo.png";
 
 function InnerApp() {
   const { user, signInWithGoogle } = useAuth();
