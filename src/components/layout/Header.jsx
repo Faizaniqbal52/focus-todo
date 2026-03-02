@@ -2,6 +2,8 @@ import React from 'react';
 import useAuth from '../../hooks/useAuth';
 import useTasks from '../../hooks/useTasks';
 import useToast from '../../hooks/useToast';
+import logo from "../../assets/srya-logo.png";
+
 
 export default function Header() {
   const { logOut } = useAuth();
@@ -22,7 +24,7 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-left">
-        <img src="/srya-logo.png" alt="Srya Logo" className="brand-logo" />
+        <img src={logo} alt="Srya Logo" className="brand-logo" />
       </div>
 
       <div className="header-right">

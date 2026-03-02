@@ -10,6 +10,7 @@ import CompletedList from './components/tasks/CompletedList';
 import LogPanel from './components/logs/LogPanel';
 import useAuth from './hooks/useAuth';
 import useToast from './hooks/useToast';
+import logo from "../../assets/srya-logo.png";
 
 function InnerApp() {
   const { user, signInWithGoogle } = useAuth();
@@ -34,7 +35,7 @@ function InnerApp() {
   return (
     <div className="app login-screen">
       <div className="login-card">
-        <img src="/srya-logo.png" alt="Srya Logo" className="brand-logo" />
+        <img src={logo} alt="Srya Logo" className="brand-logo" />
 
         <button
           className="primary login-btn"
@@ -46,7 +47,6 @@ function InnerApp() {
     </div>
   );
 }
-
 
   return (
     <div className="app">
