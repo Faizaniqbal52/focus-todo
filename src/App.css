@@ -57,8 +57,9 @@ header.header {
 
 .brand-text {
   background: linear-gradient(135deg, #ffffff, #c084fc);
+  background-clip: text;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .progress {
