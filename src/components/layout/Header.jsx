@@ -2,8 +2,7 @@ import React from 'react';
 import useAuth from '../../hooks/useAuth';
 import useTasks from '../../hooks/useTasks';
 import useToast from '../../hooks/useToast';
-import logo from "./assets/srya-logo.png";
-
+import logo from "../../assets/srya-logo.png";
 
 export default function Header() {
   const { logOut } = useAuth();
