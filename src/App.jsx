@@ -34,11 +34,7 @@ function InnerApp() {
   return (
     <div className="app login-screen">
       <div className="login-card">
-        <img
-          src="/srya-logo.png"
-          alt="Srya Logo"
-          className="brand-logo"
-        />
+        <img src="/srya-logo.png" alt="Srya Logo" className="brand-logo" />
 
         <button
           className="primary login-btn"
