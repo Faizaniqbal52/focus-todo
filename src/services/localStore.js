@@ -5,6 +5,7 @@
 
 const TASKS_KEY = 'srya:tasks';
 const LOGS_KEY = 'srya:logs';
+const SESSIONS_KEY = 'srya:sessions';
 
 const listeners = new Set();
 
@@ -39,7 +40,8 @@ function emit() {
 // Notify when another tab changes the same data.
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
-    if (e.key === TASKS_KEY || e.key === LOGS_KEY) emit();
+    if (e.key === TASKS_KEY || e.key === LOGS_KEY || e.key === SESSIONS_KEY)
+      emit();
   });
 }
 
@@ -52,6 +54,8 @@ export const getTasks = () => read(TASKS_KEY, []);
 export const setTasks = (tasks) => write(TASKS_KEY, tasks);
 export const getLogs = () => read(LOGS_KEY, {});
 export const setLogs = (logs) => write(LOGS_KEY, logs);
+export const getSessions = () => read(SESSIONS_KEY, []);
+export const setSessions = (sessions) => write(SESSIONS_KEY, sessions);
 
 export function genId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();

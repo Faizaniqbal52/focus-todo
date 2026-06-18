@@ -5,6 +5,7 @@ import { ToastProvider } from './context/ToastContext';
 import Toast from './components/common/Toast';
 import Header from './components/layout/Header';
 import Dashboard from './components/dashboard/Dashboard';
+import FocusSection from './components/focus/FocusSection';
 import TaskInput from './components/tasks/TaskInput';
 import TaskList from './components/tasks/TaskList';
 import CompletedList from './components/tasks/CompletedList';
@@ -19,6 +20,8 @@ function InnerApp() {
       <Header />
 
       <Dashboard />
+
+      <FocusSection />
 
       <TaskInput />
 

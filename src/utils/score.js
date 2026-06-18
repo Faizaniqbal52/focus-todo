@@ -36,9 +36,15 @@ export function computeDailyPower(signals) {
   return Math.round((weighted / totalWeight) * 100);
 }
 
-// Builds today's signals from what we currently collect (tasks + logs).
-// Focus and habits are passed as null until those phases land.
-export function signalsForDay(key, { tasks = [], logs = {} } = {}) {
+// A "full" focus day, in minutes — the bar that earns full marks on the focus
+// signal. Phase 2 default; tune as we learn what a strong day looks like.
+export const FOCUS_DAILY_TARGET_MIN = 120;
+// How many focus sessions a day we nudge toward (the "sessions vs target" ring).
+export const FOCUS_SESSION_TARGET = 4;
+
+// Builds today's signals from what we currently collect (tasks + logs + focus).
+// Habits stay null until Phase 3.
+export function signalsForDay(key, { tasks = [], logs = {}, sessions = [] } = {}) {
   // Completion: tasks created that day that got completed.
   const dayTasks = tasks.filter((t) => t.createdDateKey === key);
   const completedToday = dayTasks.filter((t) => t.completed).length;
@@ -50,12 +56,42 @@ export function signalsForDay(key, { tasks = [], logs = {} } = {}) {
   // Treat 5+ completed items in a day as a strong day (cap at 1).
   const output = logged > 0 ? Math.min(logged / 5, 1) : null;
 
+  // Focus: minutes of focused work that day vs the daily target.
+  const focusStat = focusForDay(key, sessions);
+  const focus =
+    focusStat.totalSeconds > 0
+      ? Math.min(focusStat.totalMinutes / FOCUS_DAILY_TARGET_MIN, 1)
+      : null;
+
   return {
     completion: completion === null ? null : { value: completion, weight: 3 },
     output: output === null ? null : { value: output, weight: 2 },
-    focus: null, // Phase 2
+    focus: focus === null ? null : { value: focus, weight: 2 },
     habits: null, // Phase 3
   };
+}
+
+// --- Focus -----------------------------------------------------------------
+// Aggregates one day's focus sessions into the numbers the cards show.
+export function focusForDay(key, sessions = []) {
+  const day = sessions.filter((s) => s.dateKey === key);
+  const totalSeconds = day.reduce((sum, s) => sum + (s.duration || 0), 0);
+  const count = day.length;
+  return {
+    count,
+    totalSeconds,
+    totalMinutes: Math.round(totalSeconds / 60),
+    avgSeconds: count ? Math.round(totalSeconds / count) : 0,
+  };
+}
+
+// Daily focus minutes across the window, for the Focus Time bar chart.
+export function focusSeries(sessions, days = 7) {
+  return lastNDays(days).map((key) => ({
+    key,
+    label: shortLabel(key),
+    value: focusForDay(key, sessions).totalMinutes,
+  }));
 }
 
 // --- Weekly Grade ----------------------------------------------------------

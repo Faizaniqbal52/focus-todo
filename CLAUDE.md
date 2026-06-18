@@ -94,8 +94,8 @@ face keeps the power but dials the noise:
 
 - **Phase 0 — Safety & foundation** ✅ DONE
 - **Phase 1 — Dashboard shell + Daily Power + Weekly Grade** ✅ DONE
-- **Phase 2 — Focus timer + Focus Time** cards/charts ⬅️ NEXT
-- **Phase 3 — Habit tracking + heatmap**
+- **Phase 2 — Focus timer + Focus Time** cards/charts ✅ DONE
+- **Phase 3 — Habit tracking + heatmap** ⬅️ NEXT
 - **Phase 4 — Anti-Procrastination engine + Daily Code**
 - **Phase 5 — Polish:** responsiveness, load speed, accessibility, QA
 

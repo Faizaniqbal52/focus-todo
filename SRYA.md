@@ -209,6 +209,33 @@ Each phase ships on its own; the live site never has to be "down for a rewrite."
 - **Full production build compiled clean.** *Why:* this ships to the live site, so
   "it builds" was verified, not assumed.
 
-### Next up — Phase 2
-- Focus timer + Focus Time cards and charts, feeding the so-far-`null` `focus`
-  signal in the scoring engine so Daily Power gets richer automatically.
+### 2026-06-18 — Phase 2: Focus timer + Focus Time (done)
+- **Added a focus-session data layer.** Sessions
+  (`{ id, startedAt, endedAt, duration, taskId, dateKey }`) live in the same
+  on-device store under a new `srya:sessions` key, with a reactive
+  `focusService` and a third subscription folded into the *single* shared
+  `AppDataContext` listener. *Why:* keep the "one listener, not many" performance
+  promise while adding a new data source.
+- **Built the focus stopwatch** (`useFocusTimer` + `FocusTimer`). It persists the
+  *intent* (when it started, time banked before the last pause) and derives live
+  elapsed seconds from the clock, so a **mid-session page reload resumes at the
+  right number** instead of resetting. Start / Pause / Resume / Finish / Reset.
+  *Why:* a focus timer that loses your session on refresh isn't trustworthy.
+- **Built the Focus Time card** — today's total focus (the big "6h 40m" from the
+  reference), average session, sessions-vs-target pips, and a 7-day bar chart.
+  *Why:* this is module 4 of the nine, straight off the design.
+- **Wired the focus signal into the scoring engine.** `signalsForDay` now reads
+  sessions and contributes a `focus` signal (focus minutes vs a 120-min daily
+  target, weight 2). Because the engine drops empty signals and re-normalises,
+  **Daily Power automatically gets richer** the moment a user logs focus — no
+  dashboard changes needed. *Why:* the whole point of the weighted design from
+  Phase 0 was exactly this kind of drop-in.
+- **Charts stay code-split.** The Focus Time bar chart lazy-loads like the Phase 1
+  charts; the main bundle held at ~66 kB gzipped. Used an emerald accent for focus
+  to echo the reference's green "performance is good" cue while keeping violet as
+  the base. *Why:* fast first paint, and a visual language where green = momentum.
+- **Full production build compiled clean.** *Why:* it ships to the live site.
+
+### Next up — Phase 3
+- Habit tracking + the GitHub-style heatmap, adding the `habits` signal (still
+  `null`) so Daily Power gains its final everyday input.
