@@ -1,24 +1,10 @@
 import React from 'react';
-import useAuth from '../../hooks/useAuth';
 import useTasks from '../../hooks/useTasks';
-import useToast from '../../hooks/useToast';
-import logo from "../../assets/srya-logo.png";
+import logo from '../../assets/srya-logo.png';
 
 export default function Header() {
-  const { logOut } = useAuth();
   const { tasks } = useTasks();
-  const toast = useToast();
-
   const completed = tasks.filter((t) => t.completed).length;
-
-  const handleLogout = async () => {
-    try {
-      await logOut();
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error('Logout failed. Please try again.');
-    }
-  };
 
   return (
     <header className="header">
@@ -30,9 +16,6 @@ export default function Header() {
         <span className="progress">
           {completed} / {tasks.length}
         </span>
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
       </div>
     </header>
   );

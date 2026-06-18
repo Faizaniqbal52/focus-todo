@@ -1,26 +1,18 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useContext } from 'react';
+import { AppDataContext } from '../context/AppDataContext';
 import * as taskService from '../services/taskService';
 import useToast from './useToast';
 
+// Reads from the shared on-device data; exposes the same mutation API.
 export default function useTasks() {
-  const [tasks, setTasks] = useState([]);
+  const { tasks } = useContext(AppDataContext);
   const toast = useToast();
 
-  useEffect(() => {
-    let unsub;
-    const user = taskService.getCurrentUser();
-    if (!user) return;
-    unsub = taskService.subscribeTasks(user.uid, (data) => setTasks(data));
-    return () => unsub && unsub();
-  }, []);
-
   const addTask = useCallback(async (text) => {
-    const user = taskService.getCurrentUser();
-    if (!user) return false;
     if (!text || !text.trim()) return false;
     try {
-      await taskService.addTask(user.uid, text.trim());
-      toast.success('✓ Task added');
+      taskService.addTask(text.trim());
+      toast.success('\u2713 Task added');
       return true;
     } catch (error) {
       console.error('Add task error:', error);
@@ -30,13 +22,9 @@ export default function useTasks() {
   }, [toast]);
 
   const toggleTask = useCallback(async (task) => {
-    const user = taskService.getCurrentUser();
-    if (!user) return;
     try {
-      await taskService.toggleTask(user.uid, task);
-      if (!task.completed) {
-        toast.success('✓ Task completed');
-      }
+      taskService.toggleTask(task);
+      if (!task.completed) toast.success('\u2713 Task completed');
     } catch (error) {
       console.error('Toggle task error:', error);
       toast.error('Failed to update task. Please try again.');
@@ -44,12 +32,10 @@ export default function useTasks() {
   }, [toast]);
 
   const deleteTask = useCallback(async (id) => {
-    const user = taskService.getCurrentUser();
-    if (!user) return;
     if (!window.confirm('Delete this task?')) return;
     try {
-      await taskService.deleteTask(user.uid, id);
-      toast.success('✓ Task deleted');
+      taskService.deleteTask(id);
+      toast.success('\u2713 Task deleted');
     } catch (error) {
       console.error('Delete task error:', error);
       toast.error('Failed to delete task. Please try again.');
@@ -57,12 +43,10 @@ export default function useTasks() {
   }, [toast]);
 
   const updateTaskText = useCallback(async (id, text) => {
-    const user = taskService.getCurrentUser();
-    if (!user) return;
     if (!text || !text.trim()) return;
     try {
-      await taskService.updateTaskText(user.uid, id, text.trim());
-      toast.success('✓ Task updated');
+      taskService.updateTaskText(id, text.trim());
+      toast.success('\u2713 Task updated');
     } catch (error) {
       console.error('Update task error:', error);
       toast.error('Failed to update task. Please try again.');

@@ -1,52 +1,87 @@
-import { db } from './firebase';
-import { getCurrentUser as getAuthUser } from './firebase';
-import {
-  collection,
-  doc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  serverTimestamp,
-  arrayUnion
-} from 'firebase/firestore';
+import * as store from './localStore';
 
-export const getCurrentUser = () => getAuthUser();
+// Local (on-device) task service. Same function names and data shape as the
+// previous Firestore version, so hooks and components are unchanged.
 
-export function subscribeTasks(userId, cb) {
-  const q = query(collection(db, 'users', userId, 'tasks'), orderBy('createdAt', 'desc'));
-  const unsub = onSnapshot(q, (snap) => {
-    const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    cb(data);
+function localDateKey(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
+}
+
+function sortByCreatedDesc(tasks) {
+  return [...tasks].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+export function subscribeTasks(cb) {
+  const push = () => cb(sortByCreatedDesc(store.getTasks()));
+  push(); // emit current state immediately
+  return store.subscribe(push);
+}
+
+export function addTask(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) return;
+  const tasks = store.getTasks();
+  tasks.push({
+    id: store.genId(),
+    text: trimmed,
+    completed: false,
+    createdAt: Date.now(),
+    completedAt: null,
+    timeSpent: 0,
+    deepWork: false,
+    createdDateKey: localDateKey(),
+    deferCount: 0,
   });
-  return unsub;
+  store.setTasks(tasks);
 }
 
-export async function addTask(userId, text) {
-  const trimmed = text.trim();
-  const docId = trimmed.toLowerCase();
-  const taskRef = doc(db, 'users', userId, 'tasks', docId);
-  await setDoc(taskRef, { text: trimmed, completed: false, createdAt: serverTimestamp(), completedAt: null });
-}
+export function toggleTask(taskItem) {
+  const tasks = store.getTasks();
+  const idx = tasks.findIndex((t) => t.id === taskItem.id);
+  if (idx === -1) return;
+  const newState = !tasks[idx].completed;
+  tasks[idx] = {
+    ...tasks[idx],
+    completed: newState,
+    completedAt: newState ? Date.now() : null,
+  };
+  store.setTasks(tasks);
 
-export async function toggleTask(userId, taskItem) {
-  const taskRef = doc(db, 'users', userId, 'tasks', taskItem.id);
-  const newState = !taskItem.completed;
-  await updateDoc(taskRef, { completed: newState, completedAt: newState ? serverTimestamp() : null });
   if (newState) {
-    const now = new Date();
-    const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    const logRef = doc(db, 'users', userId, 'logs', dateKey);
-    await setDoc(logRef, { entries: arrayUnion(taskItem.text) }, { merge: true });
+    const key = localDateKey();
+    const logs = store.getLogs();
+    const entries = logs[key] || [];
+    if (!entries.includes(tasks[idx].text)) {
+      logs[key] = [...entries, tasks[idx].text];
+      store.setLogs(logs);
+    }
   }
 }
 
-export async function deleteTask(userId, id) {
-  await deleteDoc(doc(db, 'users', userId, 'tasks', id));
+export function deleteTask(id) {
+  store.setTasks(store.getTasks().filter((t) => t.id !== id));
 }
 
-export async function updateTaskText(userId, id, text) {
-  await updateDoc(doc(db, 'users', userId, 'tasks', id), { text });
+export function updateTaskText(id, text) {
+  const tasks = store.getTasks().map((t) =>
+    t.id === id ? { ...t, text } : t
+  );
+  store.setTasks(tasks);
+}
+
+export function addTimeToTask(id, seconds) {
+  if (!seconds) return;
+  const tasks = store.getTasks().map((t) =>
+    t.id === id ? { ...t, timeSpent: (t.timeSpent || 0) + seconds } : t
+  );
+  store.setTasks(tasks);
+}
+
+export function setDeepWork(id, value) {
+  const tasks = store.getTasks().map((t) =>
+    t.id === id ? { ...t, deepWork: !!value } : t
+  );
+  store.setTasks(tasks);
 }

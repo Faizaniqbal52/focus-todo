@@ -1,0 +1,150 @@
+/* ================= DASHBOARD (Phase 1) ================= */
+/* Mobile-first: cards stack. On wider screens they form the command grid. */
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 28px 0 48px;
+}
+
+/* ----- Card shell ----- */
+.dash-card {
+  padding: 22px 22px 18px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #181a25, #14161f);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-width: 0; /* lets charts shrink inside the grid */
+}
+
+.dash-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(167, 139, 250, 0.18);
+}
+
+.dash-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.dash-card__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.dash-card__flame {
+  font-size: 16px;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.45));
+}
+
+.dash-card__sub {
+  font-size: 13px;
+  color: #6b7280;
+  letter-spacing: 0.01em;
+}
+
+/* ----- Daily Power ----- */
+.dash-power__value {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #ffffff, #c084fc);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.dash-power__pct {
+  font-size: 24px;
+  font-weight: 700;
+  margin-left: 4px;
+  -webkit-text-fill-color: #a78bfa;
+  color: #a78bfa;
+}
+
+/* ----- Weekly Grade ----- */
+.dash-card--grade {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-grade__value {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  margin: 4px 0 10px;
+  background: linear-gradient(135deg, #ffffff, #a78bfa);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* ----- Velocity ----- */
+.dash-velocity__value {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #e5e7eb;
+}
+
+.dash-velocity__unit {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  margin-left: 8px;
+}
+
+/* ----- Chart area ----- */
+.dash-chart {
+  margin-top: 14px;
+}
+
+.dash-chart__skeleton {
+  height: 120px;
+  border-radius: 12px;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.03) 30%,
+    rgba(167, 139, 250, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 70%
+  );
+  background-size: 200% 100%;
+  animation: dashShimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes dashShimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ----- Larger screens: the command grid ----- */
+@media (min-width: 700px) {
+  .dashboard {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  /* Daily Power leads, spanning the top row. */
+  .dash-card--power {
+    grid-column: 1 / -1;
+  }
+}
