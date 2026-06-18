@@ -264,6 +264,35 @@ Each phase ships on its own; the live site never has to be "down for a rewrite."
 - **No new chart weight.** The heatmap is plain CSS/divs, so Recharts stays in its
   lazy chunk; main bundle held at ~67 kB gzipped. Build compiled clean.
 
-### Next up — Phase 4
-- Anti-Procrastination engine (surface repeatedly-deferred tasks + "Attack Now")
-  and the rotating Daily Code mantra.
+### 2026-06-18 — Phase 4: Anti-Procrastination + Daily Code (done)
+- **Lifted the focus timer into a context** (`FocusTimerContext`). It now tracks an
+  *active task* alongside the reload-safe stopwatch, so any part of the app can
+  start a session — and on Finish it banks the session *and* rolls the time onto
+  the task it targeted (`addTimeToTask`). *Why:* "Attack Now" needs to launch a
+  focus session on a specific task from a different part of the screen.
+- **Built the Anti-Procrastination engine** (`procrastinationReport` in score.js).
+  It finds pending tasks that keep getting carried over — a task's "age" is the
+  days since it was created (honouring `deferCount` too) — and names the single
+  stalest one to attack next. *Why:* this is the intelligence layer; its job is to
+  point, not to list.
+- **Built the Anti-Procrastination card.** Shows the one task to attack, how long
+  it's been slipping, and how many tasks are slipping overall. **"Attack Now"**
+  starts a focus session on that exact task and scrolls to the timer, which now
+  reads "Focusing on …". Calm green "all caught up" / "nothing queued" states when
+  there's nothing to fight. *Why:* one decisive action beats a guilt-inducing list.
+- **Built the Daily Code** (module 0) — a 30-line mantra pool, one chosen
+  deterministically per calendar day (stable all day, rotates at midnight), shown
+  as a slim banner under the header. *Why:* resets mindset each morning, exactly as
+  the reference's bottom tagline implied.
+- **Verified end to end.** Extended the integration smoke test: it seeds a stale
+  task, asserts the engine names "Do taxes" (4 days carried), clicks Attack Now and
+  confirms the focus timer targets that task and runs. All 7 tests pass; full build
+  compiled clean (main bundle ~69 kB gzipped).
+
+> With Phase 4 in, all nine modules from the charter exist and feed one another:
+> tasks → completion + procrastination, focus → Focus Time, habits → heatmap, and
+> all three roll up into Daily Power, the Weekly Grade and the Daily Code framing.
+
+### Next up — Phase 5
+- Polish pass: responsiveness across phone/tablet/desktop, load-speed and
+  accessibility checks, and a final QA sweep over the whole command center.

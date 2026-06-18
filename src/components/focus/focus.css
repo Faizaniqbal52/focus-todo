@@ -23,6 +23,20 @@
   flex-direction: column;
 }
 
+.focus-timer__task {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: -2px 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-timer__task strong {
+  color: #34d399;
+  font-weight: 700;
+}
+
 .focus-timer__clock {
   font-size: 64px;
   font-weight: 800;

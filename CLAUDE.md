@@ -96,8 +96,8 @@ face keeps the power but dials the noise:
 - **Phase 1 — Dashboard shell + Daily Power + Weekly Grade** ✅ DONE
 - **Phase 2 — Focus timer + Focus Time** cards/charts ✅ DONE
 - **Phase 3 — Habit tracking + heatmap** ✅ DONE
-- **Phase 4 — Anti-Procrastination engine + Daily Code** ⬅️ NEXT
-- **Phase 5 — Polish:** responsiveness, load speed, accessibility, QA
+- **Phase 4 — Anti-Procrastination engine + Daily Code** ✅ DONE
+- **Phase 5 — Polish:** responsiveness, load speed, accessibility, QA ⬅️ NEXT
 
 Each phase is independently deployable; the live site never has to go "down for a
 rewrite."

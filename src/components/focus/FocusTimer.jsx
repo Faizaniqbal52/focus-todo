@@ -1,29 +1,25 @@
 import React from 'react';
-import useFocusTimer from '../../hooks/useFocusTimer';
-import { addSession } from '../../services/focusService';
-import useToast from '../../hooks/useToast';
-import { formatClock, formatDuration } from '../../utils/time';
+import { useFocusTimer } from '../../context/FocusTimerContext';
+import { formatClock } from '../../utils/time';
 
-// The focus stopwatch. Start it when you sit down to focus; Finish banks the
-// session into the day's Focus Time, which in turn feeds Daily Power.
+// The focus stopwatch UI. Driven by the shared FocusTimer context, so it shows
+// the task launched via Anti-Procrastination's "Attack Now" and banks the
+// session (onto that task) on Finish.
 export default function FocusTimer() {
-  const { status, elapsed, start, pause, reset, finish } = useFocusTimer();
-  const toast = useToast();
-
-  const onFinish = () => {
-    const session = finish();
-    if (session) {
-      addSession(session);
-      toast.success(`✓ Focus session saved · ${formatDuration(session.duration)}`);
-    }
-  };
+  const { status, elapsed, activeTask, start, pause, reset, finish } = useFocusTimer();
 
   return (
-    <section className="dash-card focus-timer">
+    <section className="dash-card focus-timer" id="focus-timer">
       <div className="dash-card__head">
         <span className="dash-card__label">Focus Timer</span>
         <span className={`focus-timer__dot focus-timer__dot--${status}`} aria-hidden="true" />
       </div>
+
+      {activeTask && status !== 'idle' && (
+        <div className="focus-timer__task" title={activeTask.text}>
+          Focusing on <strong>{activeTask.text}</strong>
+        </div>
+      )}
 
       <div
         className={`focus-timer__clock ${status === 'running' ? 'is-running' : ''}`}
@@ -41,7 +37,7 @@ export default function FocusTimer() {
 
       <div className="focus-timer__actions">
         {status === 'idle' && (
-          <button className="primary focus-btn" onClick={start}>
+          <button className="primary focus-btn" onClick={() => start()}>
             Start Focus
           </button>
         )}
@@ -51,7 +47,7 @@ export default function FocusTimer() {
             <button className="focus-btn focus-btn--ghost" onClick={pause}>
               Pause
             </button>
-            <button className="focus-btn focus-btn--finish" onClick={onFinish}>
+            <button className="focus-btn focus-btn--finish" onClick={finish}>
               Finish
             </button>
           </>
@@ -59,10 +55,10 @@ export default function FocusTimer() {
 
         {status === 'paused' && (
           <>
-            <button className="primary focus-btn" onClick={start}>
+            <button className="primary focus-btn" onClick={() => start()}>
               Resume
             </button>
-            <button className="focus-btn focus-btn--finish" onClick={onFinish}>
+            <button className="focus-btn focus-btn--finish" onClick={finish}>
               Finish
             </button>
             <button className="focus-btn focus-btn--ghost" onClick={reset}>

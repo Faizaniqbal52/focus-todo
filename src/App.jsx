@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import './App.css';
 import { AppDataProvider } from './context/AppDataContext';
 import { ToastProvider } from './context/ToastContext';
+import { FocusTimerProvider } from './context/FocusTimerContext';
 import Toast from './components/common/Toast';
 import Header from './components/layout/Header';
+import DailyCode from './components/dailycode/DailyCode';
 import Dashboard from './components/dashboard/Dashboard';
+import AntiProcrastination from './components/antiprocrastination/AntiProcrastination';
 import FocusSection from './components/focus/FocusSection';
 import HabitSection from './components/habits/HabitSection';
 import TaskInput from './components/tasks/TaskInput';
@@ -20,7 +23,11 @@ function InnerApp() {
     <div className="app">
       <Header />
 
+      <DailyCode />
+
       <Dashboard />
+
+      <AntiProcrastination />
 
       <FocusSection />
 
@@ -53,7 +60,9 @@ export default function App() {
     <ToastProvider>
       <Toast />
       <AppDataProvider>
-        <InnerApp />
+        <FocusTimerProvider>
+          <InnerApp />
+        </FocusTimerProvider>
       </AppDataProvider>
     </ToastProvider>
   );

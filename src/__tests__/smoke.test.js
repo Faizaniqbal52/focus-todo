@@ -21,6 +21,8 @@ function seed() {
     JSON.stringify([
       { id: 't1', text: 'Ship Phase 3', completed: true, createdDateKey: today, createdAt: Date.now() },
       { id: 't2', text: 'Write tests', completed: false, createdDateKey: today, createdAt: Date.now() },
+      // a stale, repeatedly-carried task for the anti-procrastination engine
+      { id: 't0', text: 'Do taxes', completed: false, createdDateKey: dayKey(4), createdAt: 1 },
     ])
   );
   localStorage.setItem('srya:logs', JSON.stringify({ [today]: ['Ship Phase 3'], [dayKey(1)]: ['A', 'B'] }));
@@ -98,6 +100,29 @@ test('adding a habit appends it to the list', () => {
   fireEvent.change(input, { target: { value: 'Meditate' } });
   fireEvent.keyDown(input, { key: 'Enter' });
   expect(screen.getByText('Meditate')).toBeInTheDocument();
+});
+
+test('Daily Code banner renders a mantra', () => {
+  render(<App />);
+  expect(screen.getByText('Daily Code')).toBeInTheDocument();
+  const text = document.querySelector('.daily-code__text').textContent;
+  expect(text.length).toBeGreaterThan(10);
+});
+
+test('anti-procrastination names the stalest task and Attack Now starts a focus session on it', () => {
+  render(<App />);
+  const card = screen.getByText('Anti-Procrastination').closest('.antiproc');
+  // stalest pending task is "Do taxes" (4 days old)
+  expect(within(card).getByText('Do taxes')).toBeInTheDocument();
+  expect(within(card).getByText(/carried over 4 days/i)).toBeInTheDocument();
+
+  fireEvent.click(within(card).getByRole('button', { name: /Attack Now/i }));
+
+  // the focus timer now targets that task and is running
+  expect(screen.getByText(/Focusing on/i)).toBeInTheDocument();
+  const timer = document.getElementById('focus-timer');
+  expect(within(timer).getByText('Do taxes')).toBeInTheDocument();
+  expect(within(timer).getByText('Finish')).toBeInTheDocument();
 });
 
 test('heatmap renders a full 26-week grid of cells', () => {

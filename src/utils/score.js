@@ -157,6 +157,37 @@ export function habitStreak(habitId, habitLog = {}) {
   return { current, longest };
 }
 
+// --- Anti-Procrastination --------------------------------------------------
+// Finds tasks that keep getting carried over and names the single one to attack
+// next. A pending task's "age" is how many days have passed since it was created
+// (deferCount is honoured too, if something ever bumps it). The stalest task wins.
+export function procrastinationReport(
+  tasks = [],
+  { staleAfterDays = 1, today = dateKey() } = {}
+) {
+  const todayIdx = dayIndex(today);
+  const pending = tasks.filter((t) => t && !t.completed);
+
+  const withAge = pending.map((t) => {
+    const created = t.createdDateKey || today;
+    const ageDays = Math.max(0, todayIdx - dayIndex(created));
+    return { ...t, ageDays, carried: Math.max(ageDays, t.deferCount || 0) };
+  });
+
+  const stale = withAge
+    .filter((t) => t.carried >= staleAfterDays)
+    .sort(
+      (a, b) => b.carried - a.carried || (a.createdAt || 0) - (b.createdAt || 0)
+    );
+
+  return {
+    target: stale[0] || null,
+    stale,
+    count: stale.length,
+    pendingCount: pending.length,
+  };
+}
+
 // --- Weekly Grade ----------------------------------------------------------
 export function weeklyGrade(dailyPowers) {
   const vals = dailyPowers.filter((v) => typeof v === 'number' && v > 0);
