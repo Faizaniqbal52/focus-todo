@@ -6,6 +6,7 @@ import Toast from './components/common/Toast';
 import Header from './components/layout/Header';
 import Dashboard from './components/dashboard/Dashboard';
 import FocusSection from './components/focus/FocusSection';
+import HabitSection from './components/habits/HabitSection';
 import TaskInput from './components/tasks/TaskInput';
 import TaskList from './components/tasks/TaskList';
 import CompletedList from './components/tasks/CompletedList';
@@ -22,6 +23,8 @@ function InnerApp() {
       <Dashboard />
 
       <FocusSection />
+
+      <HabitSection />
 
       <TaskInput />
 

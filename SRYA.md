@@ -236,6 +236,34 @@ Each phase ships on its own; the live site never has to be "down for a rewrite."
   the base. *Why:* fast first paint, and a visual language where green = momentum.
 - **Full production build compiled clean.** *Why:* it ships to the live site.
 
-### Next up — Phase 3
-- Habit tracking + the GitHub-style heatmap, adding the `habits` signal (still
-  `null`) so Daily Power gains its final everyday input.
+### 2026-06-18 — Phase 3: Habit tracking + consistency heatmap (done)
+- **Added a habit data layer.** Habits
+  (`{ id, name, emoji, createdAt, createdDateKey, archived }`) and a per-habit
+  completion log (`{ habitId: { 'YYYY-MM-DD': true } }`) live on-device under
+  `srya:habits` / `srya:habitLog`, with a reactive `habitService` folded into the
+  *single* shared `AppDataContext` listener. *Why:* a new data source without
+  giving up the one-listener performance rule.
+- **Built the habit list** — add a habit, tick it for today with one tap, see its
+  current streak (🔥 N), edit-mode to delete. *Why:* habits only work if marking
+  one is effortless.
+- **Built the GitHub-style consistency heatmap** — 26 weeks of daily completion as
+  a 5-level green grid, with month + weekday labels, a Less→More legend, per-cell
+  tooltips, and auto-scroll to the most recent weeks on phones. A day's intensity
+  is the share of that day's *active* habits completed, and a habit only counts
+  from the day it was created (no fake retro-perfect history). *Why:* this is
+  module 5, and consistency is the thing you want to feel at a glance.
+- **Wired the habits signal into Daily Power.** `signalsForDay` now contributes a
+  weighted `habits` signal (share of active habits done, weight 2) — the last of
+  the everyday inputs the engine was designed for.
+- **Fixed a real wiring gap:** the dashboard was only feeding Daily Power `tasks`
+  and `logs`, so the Phase 2 focus signal never actually reached the score. The
+  dashboard now passes *all* signals (tasks, logs, focus sessions, habits), so
+  **Daily Power finally aggregates everything** — completing a focus session or a
+  habit now visibly moves the number. *Why:* honesty — the engine was right, the
+  hand-off into it wasn't; now it is.
+- **No new chart weight.** The heatmap is plain CSS/divs, so Recharts stays in its
+  lazy chunk; main bundle held at ~67 kB gzipped. Build compiled clean.
+
+### Next up — Phase 4
+- Anti-Procrastination engine (surface repeatedly-deferred tasks + "Attack Now")
+  and the rotating Daily Code mantra.

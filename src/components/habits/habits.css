@@ -1,0 +1,295 @@
+/* ================= HABITS (Phase 3) ================= */
+/* Reuses the .dash-card shell. Habits list on top, consistency heatmap below. */
+
+.habit-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 0 0 48px;
+}
+
+.habit-head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.habit-today-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.habit-edit-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  color: #a1a1aa;
+  padding: 5px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.habit-edit-toggle:hover {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.habit-best-streak {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+/* ----- Add habit ----- */
+.habit-add {
+  display: flex;
+  gap: 12px;
+  margin: 6px 0 18px;
+}
+
+.habit-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid #1f2937;
+  font-size: 14px;
+  background: #111318;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.habit-add input::placeholder {
+  color: #6b7280;
+}
+
+.habit-add input:focus {
+  outline: none;
+  border-color: #34d399;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.16);
+}
+
+.habit-add-btn {
+  padding: 13px 22px;
+  border-radius: 12px;
+}
+
+/* ----- Habit rows ----- */
+.habit-rows {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.habit-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.habit-row:last-child {
+  border-bottom: none;
+}
+
+.habit-check {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1.5px solid #374151;
+  background: transparent;
+  color: transparent;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: all 0.18s ease;
+}
+
+.habit-check:hover {
+  border-color: #34d399;
+}
+
+.habit-row.is-done .habit-check {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  border-color: #10b981;
+  color: #04231a;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.habit-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #e5e7eb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.habit-row.is-done .habit-name {
+  color: #9ca3af;
+}
+
+.habit-streak {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
+.habit-streak.is-hot {
+  color: #f59e0b;
+}
+
+.habit-delete {
+  flex: 0 0 auto;
+  background: none;
+  color: #ef4444;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.habit-delete:hover {
+  transform: scale(1.2);
+}
+
+.habit-empty {
+  color: #6b7280;
+  font-size: 14px;
+  font-style: italic;
+  margin: 8px 0 0;
+  opacity: 0.8;
+}
+
+/* ================= HEATMAP ================= */
+.heatmap {
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-top: 8px;
+  /* thin scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.heatmap::-webkit-scrollbar {
+  height: 6px;
+}
+.heatmap::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+}
+
+.heatmap-inner {
+  display: inline-block;
+  min-width: max-content;
+}
+
+.heatmap-months {
+  display: flex;
+  gap: 3px;
+  margin-left: 30px; /* clears the weekday column */
+  margin-bottom: 5px;
+}
+
+.heatmap-month {
+  width: 13px;
+  flex: 0 0 13px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: visible;
+  letter-spacing: 0.03em;
+}
+
+.heatmap-body {
+  display: flex;
+  gap: 6px;
+}
+
+.heatmap-weekdays {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 24px;
+  flex: 0 0 24px;
+}
+
+.heatmap-weekday {
+  height: 13px;
+  line-height: 13px;
+  font-size: 9px;
+  color: #6b7280;
+  text-align: right;
+}
+
+.heatmap-grid {
+  display: flex;
+  gap: 3px;
+}
+
+.heatmap-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.heatmap-cell {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.heatmap-cell.is-empty {
+  background: transparent;
+}
+
+.heatmap-cell.lvl--1 {
+  background: rgba(255, 255, 255, 0.035);
+}
+.heatmap-cell.lvl-0 {
+  background: rgba(255, 255, 255, 0.07);
+}
+.heatmap-cell.lvl-1 {
+  background: rgba(52, 211, 153, 0.25);
+}
+.heatmap-cell.lvl-2 {
+  background: rgba(52, 211, 153, 0.45);
+}
+.heatmap-cell.lvl-3 {
+  background: rgba(52, 211, 153, 0.7);
+}
+.heatmap-cell.lvl-4 {
+  background: #34d399;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  margin-left: 30px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.heatmap-legend .heatmap-cell {
+  width: 11px;
+  height: 11px;
+}
+
+.heatmap-legend span:first-child {
+  margin-right: 2px;
+}
+.heatmap-legend span:last-child {
+  margin-left: 2px;
+}

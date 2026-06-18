@@ -42,9 +42,12 @@ export const FOCUS_DAILY_TARGET_MIN = 120;
 // How many focus sessions a day we nudge toward (the "sessions vs target" ring).
 export const FOCUS_SESSION_TARGET = 4;
 
-// Builds today's signals from what we currently collect (tasks + logs + focus).
-// Habits stay null until Phase 3.
-export function signalsForDay(key, { tasks = [], logs = {}, sessions = [] } = {}) {
+// Builds today's signals from everything we collect: tasks, logs, focus, habits.
+// Any signal with no data for the day is null and drops out of the weighting.
+export function signalsForDay(
+  key,
+  { tasks = [], logs = {}, sessions = [], habits = [], habitLog = {} } = {}
+) {
   // Completion: tasks created that day that got completed.
   const dayTasks = tasks.filter((t) => t.createdDateKey === key);
   const completedToday = dayTasks.filter((t) => t.completed).length;
@@ -63,11 +66,15 @@ export function signalsForDay(key, { tasks = [], logs = {}, sessions = [] } = {}
       ? Math.min(focusStat.totalMinutes / FOCUS_DAILY_TARGET_MIN, 1)
       : null;
 
+  // Habits: share of that day's active habits that were completed.
+  const habitStat = habitsForDay(key, habits, habitLog);
+  const habits_ = habitStat.active > 0 ? habitStat.ratio : null;
+
   return {
     completion: completion === null ? null : { value: completion, weight: 3 },
     output: output === null ? null : { value: output, weight: 2 },
     focus: focus === null ? null : { value: focus, weight: 2 },
-    habits: null, // Phase 3
+    habits: habits_ === null ? null : { value: habits_, weight: 2 },
   };
 }
 
@@ -92,6 +99,62 @@ export function focusSeries(sessions, days = 7) {
     label: shortLabel(key),
     value: focusForDay(key, sessions).totalMinutes,
   }));
+}
+
+// --- Habits ----------------------------------------------------------------
+export function activeHabits(habits = []) {
+  return habits.filter((h) => h && !h.archived);
+}
+
+// A habit counts toward a day only once it exists (createdDateKey <= key).
+function habitWasActive(habit, key) {
+  return !habit.createdDateKey || habit.createdDateKey <= key;
+}
+
+export function isHabitDone(habitLog, habitId, key) {
+  return !!(habitLog[habitId] && habitLog[habitId][key]);
+}
+
+// One day's habit consistency: how many active habits were completed.
+export function habitsForDay(key, habits = [], habitLog = {}) {
+  const active = activeHabits(habits).filter((h) => habitWasActive(h, key));
+  const done = active.filter((h) => isHabitDone(habitLog, h.id, key)).length;
+  return {
+    done,
+    active: active.length,
+    ratio: active.length ? done / active.length : 0,
+  };
+}
+
+// Current + longest streak for one habit, in days.
+export function habitStreak(habitId, habitLog = {}) {
+  const done = habitLog[habitId] || {};
+
+  // Current: walk back from today. Today may still be incomplete (grace day),
+  // so if it isn't ticked yet we start counting from yesterday.
+  let current = 0;
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+  if (!done[dateKey(cursor)]) cursor.setDate(cursor.getDate() - 1);
+  while (done[dateKey(cursor)]) {
+    current += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  // Longest: scan all ticked days for the longest consecutive run.
+  const keys = Object.keys(done)
+    .filter((k) => done[k])
+    .sort();
+  let longest = 0;
+  let run = 0;
+  let prev = null;
+  for (const k of keys) {
+    run = prev && dayIndex(k) - dayIndex(prev) === 1 ? run + 1 : 1;
+    if (run > longest) longest = run;
+    prev = k;
+  }
+
+  return { current, longest };
 }
 
 // --- Weekly Grade ----------------------------------------------------------
@@ -145,4 +208,10 @@ function shortLabel(key) {
   const [y, m, d] = key.split('-').map(Number);
   const date = new Date(y, m - 1, d);
   return date.toLocaleDateString(undefined, { weekday: 'short' });
+}
+
+// Whole-day number for a date key, via UTC so DST never adds or drops a day.
+function dayIndex(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
 }

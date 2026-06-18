@@ -16,10 +16,11 @@ import './dashboard.css';
 // The Phase 1 command center. Reads the shared on-device data once and turns it
 // into the numbers via the pure scoring engine — no new data listeners.
 export default function Dashboard() {
-  const { tasks, logs } = useContext(AppDataContext);
+  const { tasks, logs, sessions, habits, habitLog } = useContext(AppDataContext);
 
   const { today, series, grade, velocity } = useMemo(() => {
-    const data = { tasks, logs };
+    // Every signal flows in here: tasks, logs, focus sessions and habits.
+    const data = { tasks, logs, sessions, habits, habitLog };
     const todayKey = dateKey();
     const powerSeries = dailyPowerSeries(data, 7);
     return {
@@ -28,7 +29,7 @@ export default function Dashboard() {
       grade: weeklyGrade(powerSeries.map((s) => s.value)),
       velocity: completionVelocity(logs, 7),
     };
-  }, [tasks, logs]);
+  }, [tasks, logs, sessions, habits, habitLog]);
 
   return (
     <div className="dashboard">
