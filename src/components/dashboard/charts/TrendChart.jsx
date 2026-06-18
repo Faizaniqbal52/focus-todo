@@ -16,8 +16,8 @@ export default function TrendChart({ data }) {
       <AreaChart data={data} margin={{ top: 8, right: 6, left: 6, bottom: 0 }}>
         <defs>
           <linearGradient id="srya-power-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.45} />
-            <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+            <stop offset="0%" stopColor="#34d399" stopOpacity={0.45} />
+            <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis
@@ -29,10 +29,10 @@ export default function TrendChart({ data }) {
         />
         <YAxis hide domain={[0, 100]} />
         <Tooltip
-          cursor={{ stroke: 'rgba(167,139,250,0.25)' }}
+          cursor={{ stroke: 'rgba(52,211,153,0.25)' }}
           contentStyle={{
             background: '#14161f',
-            border: '1px solid rgba(167,139,250,0.3)',
+            border: '1px solid rgba(52,211,153,0.3)',
             borderRadius: 10,
             color: '#e5e7eb',
             fontSize: 12,
@@ -43,11 +43,11 @@ export default function TrendChart({ data }) {
         <Area
           type="monotone"
           dataKey="value"
-          stroke="#a78bfa"
+          stroke="#34d399"
           strokeWidth={2}
           fill="url(#srya-power-fill)"
-          dot={{ r: 2.5, fill: '#a78bfa', strokeWidth: 0 }}
-          activeDot={{ r: 4, fill: '#c4b5fd', strokeWidth: 0 }}
+          dot={{ r: 2.5, fill: '#34d399', strokeWidth: 0 }}
+          activeDot={{ r: 4, fill: '#6ee7b7', strokeWidth: 0 }}
           isAnimationActive={false}
         />
       </AreaChart>
