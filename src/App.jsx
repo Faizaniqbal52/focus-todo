@@ -1,56 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './App.css';
 import { AppDataProvider } from './context/AppDataContext';
 import { ToastProvider } from './context/ToastContext';
 import { FocusTimerProvider } from './context/FocusTimerContext';
 import Toast from './components/common/Toast';
 import Header from './components/layout/Header';
-import DailyCode from './components/dailycode/DailyCode';
-import Dashboard from './components/dashboard/Dashboard';
-import AntiProcrastination from './components/antiprocrastination/AntiProcrastination';
-import FocusSection from './components/focus/FocusSection';
-import HabitSection from './components/habits/HabitSection';
-import TaskInput from './components/tasks/TaskInput';
-import TaskList from './components/tasks/TaskList';
-import CompletedList from './components/tasks/CompletedList';
-import LogPanel from './components/logs/LogPanel';
+import CommandCenter from './components/layout/CommandCenter';
 
 function InnerApp() {
-  const [showLog, setShowLog] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-
   return (
-    <div className="app">
+    <div className="app app--command">
       <Header />
-
-      <DailyCode />
-
-      <Dashboard />
-
-      <AntiProcrastination />
-
-      <FocusSection />
-
-      <HabitSection />
-
-      <TaskInput />
-
-      <div className="log-toggle">
-        <button onClick={() => setEditMode((p) => !p)}>
-          {editMode ? 'Done Editing' : 'Edit Tasks'}
-        </button>
-      </div>
-
-      <TaskList editMode={editMode} />
-      <CompletedList />
-
-      <div className="log-toggle">
-        <button onClick={() => setShowLog((s) => !s)}>
-          {showLog ? 'Hide Log' : 'View Log'}
-        </button>
-      </div>
-
-      {showLog && <LogPanel editMode={editMode} />}
+      <CommandCenter />
     </div>
   );
 }

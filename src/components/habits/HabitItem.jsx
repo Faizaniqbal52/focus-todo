@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../common/Icon';
 
 // One habit: a tick button for today, its name, current streak, and (in edit
 // mode) a delete control. The whole row toggles today's completion.
@@ -12,7 +13,7 @@ export default function HabitItem({ habit, doneToday, streak, onToggle, onDelete
         aria-label={`${doneToday ? 'Unmark' : 'Mark'} ${habit.name} for today`}
         title={doneToday ? 'Completed today' : 'Mark done for today'}
       >
-        {doneToday ? '✓' : ''}
+        {doneToday && <Icon name="check" size={15} strokeWidth={2.4} />}
       </button>
 
       <span className="habit-name">
@@ -21,7 +22,13 @@ export default function HabitItem({ habit, doneToday, streak, onToggle, onDelete
       </span>
 
       <span className={`habit-streak ${streak.current > 0 ? 'is-hot' : ''}`}>
-        {streak.current > 0 ? `🔥 ${streak.current}` : '—'}
+        {streak.current > 0 ? (
+          <>
+            <Icon name="flame" size={13} /> {streak.current}
+          </>
+        ) : (
+          '—'
+        )}
       </span>
 
       {editMode && (

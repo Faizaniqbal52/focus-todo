@@ -1,4 +1,5 @@
 import React, { Suspense, lazy } from 'react';
+import Icon from '../common/Icon';
 
 const VelocityChart = lazy(() => import('./charts/VelocityChart'));
 
@@ -9,7 +10,9 @@ export default function VelocityCard({ velocity }) {
   return (
     <section className="dash-card dash-card--velocity">
       <div className="dash-card__head">
-        <span className="dash-card__label">Completion Velocity</span>
+        <span className="dash-card__label">
+          <Icon name="trend" size={14} /> Completion Velocity
+        </span>
       </div>
 
       <div className="dash-velocity__value">

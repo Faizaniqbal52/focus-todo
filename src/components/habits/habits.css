@@ -20,6 +20,17 @@
   color: #34d399;
 }
 
+.habit-best-streak,
+.habit-streak.is-hot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.habit-best-streak .icon,
+.habit-streak.is-hot .icon {
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.6));
+}
+
 .habit-edit-toggle {
   background: rgba(255, 255, 255, 0.05);
   color: #a1a1aa;
@@ -266,10 +277,11 @@
   background: rgba(52, 211, 153, 0.45);
 }
 .heatmap-cell.lvl-3 {
-  background: rgba(52, 211, 153, 0.7);
+  background: rgba(52, 211, 153, 0.72);
 }
 .heatmap-cell.lvl-4 {
   background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
 }
 
 .heatmap-legend {

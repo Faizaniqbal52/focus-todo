@@ -1,21 +1,26 @@
 import React from 'react';
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
-  Cell,
 } from 'recharts';
 
-// Completion Velocity — tasks completed per day over the window.
-// Lazy-loaded alongside TrendChart so charts never block first paint.
+// Completion Velocity — tasks completed per day, as a flowing line (matching the
+// reference). Lazy-loaded so Recharts stays out of first paint.
 export default function VelocityChart({ data }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
-    <ResponsiveContainer width="100%" height={120}>
-      <BarChart data={data} margin={{ top: 8, right: 6, left: 6, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={110}>
+      <AreaChart data={data} margin={{ top: 8, right: 6, left: 6, bottom: 0 }}>
+        <defs>
+          <linearGradient id="srya-velocity-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.45} />
+            <stop offset="100%" stopColor="#a78bfa" stopOpacity={0} />
+          </linearGradient>
+        </defs>
         <XAxis
           dataKey="label"
           tick={{ fill: '#6b7280', fontSize: 11 }}
@@ -25,7 +30,7 @@ export default function VelocityChart({ data }) {
         />
         <YAxis hide domain={[0, max]} />
         <Tooltip
-          cursor={{ fill: 'rgba(167,139,250,0.08)' }}
+          cursor={{ stroke: 'rgba(167,139,250,0.25)' }}
           contentStyle={{
             background: '#14161f',
             border: '1px solid rgba(167,139,250,0.3)',
@@ -36,15 +41,19 @@ export default function VelocityChart({ data }) {
           labelStyle={{ color: '#a1a1aa' }}
           formatter={(value) => [`${value}`, 'Completed']}
         />
-        <Bar dataKey="value" radius={[5, 5, 0, 0]} isAnimationActive={false}>
-          {data.map((d) => (
-            <Cell
-              key={d.key}
-              fill={d.value > 0 ? '#7c3aed' : 'rgba(255,255,255,0.06)'}
-            />
-          ))}
-        </Bar>
-      </BarChart>
+        <Area
+          type="monotone"
+          dataKey="value"
+          stroke="#a78bfa"
+          strokeWidth={2}
+          fill="url(#srya-velocity-fill)"
+          dot={{ r: 2.5, fill: '#a78bfa', strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: '#c4b5fd', strokeWidth: 0 }}
+          isAnimationActive
+          animationDuration={1100}
+          animationEasing="ease-out"
+        />
+      </AreaChart>
     </ResponsiveContainer>
   );
 }

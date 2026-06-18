@@ -1,0 +1,224 @@
+/* ================= COMMAND CENTER (dense, animated) ================= */
+
+.command {
+  width: 100%;
+}
+
+/* ----- The grid -----
+   Mobile/tablet: cards flatten into one stream (columns use display:contents)
+   and order is set explicitly. Desktop: a true 3-column command grid. */
+.cc-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.cc-col {
+  display: contents;
+}
+
+/* Mobile reading order (hero metrics first, board + habits after). */
+.task-panel { order: 7; }
+.focus-ring-card { order: 5; }
+.dash-card--power { order: 1; }
+.dash-card--velocity { order: 3; }
+.habit-heatmap-card { order: 9; }
+.dash-card--grade { order: 2; }
+.focus-time { order: 6; }
+.antiproc { order: 4; }
+.habit-list-card { order: 8; }
+
+@media (min-width: 760px) and (max-width: 1099px) {
+  .cc-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .cc-grid {
+    grid-template-columns: 300px minmax(0, 1.55fr) minmax(0, 1.05fr);
+    gap: 18px;
+  }
+  .cc-col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+  /* order only matters in the flattened mobile stream */
+  .cc-col > * { order: 0 !important; }
+}
+
+/* All cards reset their own bottom margins inside the grid columns. */
+.cc-grid .dash-card,
+.cc-grid .antiproc {
+  margin-bottom: 0;
+}
+
+/* ----- Footer (completed + log) ----- */
+.cc-footer {
+  margin-top: 28px;
+}
+.cc-footer .panel {
+  margin-bottom: 18px;
+}
+
+/* ================= Entrance animation ================= */
+@keyframes ccIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.daily-code,
+.cc-grid .dash-card,
+.cc-grid .antiproc {
+  animation: ccIn 0.5s ease both;
+}
+
+/* A gentle stagger so the center column cascades in. */
+.cc-col--center .dash-card:nth-child(1) { animation-delay: 0.04s; }
+.cc-col--center .dash-card:nth-child(2) { animation-delay: 0.12s; }
+.cc-col--center .dash-card:nth-child(3) { animation-delay: 0.2s; }
+.cc-col--right > *:nth-child(1) { animation-delay: 0.08s; }
+.cc-col--right > *:nth-child(2) { animation-delay: 0.16s; }
+.cc-col--right > *:nth-child(3) { animation-delay: 0.24s; }
+.cc-col--right > *:nth-child(4) { animation-delay: 0.32s; }
+.cc-col--left > *:nth-child(1) { animation-delay: 0.04s; }
+.cc-col--left > *:nth-child(2) { animation-delay: 0.18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-code,
+  .cc-grid .dash-card,
+  .cc-grid .antiproc {
+    animation: none;
+  }
+}
+
+/* ================= Daily Power hero tweaks ================= */
+.dash-power__row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cc-col--center .dash-power__value {
+  font-size: 64px;
+}
+
+.dash-power__delta {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.dash-power__delta.up { color: #34d399; }
+.dash-power__delta.down { color: #f87171; }
+
+/* ================= Task panel ================= */
+.task-list--panel {
+  margin: 16px 0 0;
+}
+.task-list--panel .task-card {
+  padding: 14px 14px;
+  margin-bottom: 12px;
+}
+
+/* ================= Circular focus ring ================= */
+.focus-ring {
+  position: relative;
+  width: 188px;
+  height: 188px;
+  margin: 10px auto 2px;
+}
+
+.focus-ring__svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.focus-ring__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 10;
+}
+
+.focus-ring__bar {
+  fill: none;
+  stroke: url(#ring-grad);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.95s linear;
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.6));
+}
+
+.focus-ring.is-running .focus-ring__bar {
+  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.85));
+}
+
+.focus-ring__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.focus-ring__clock {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  transition: text-shadow 0.4s ease, color 0.4s ease;
+}
+
+.focus-ring__clock.is-running {
+  color: #eafff6;
+  text-shadow:
+    0 0 22px rgba(52, 211, 153, 0.6),
+    0 0 50px rgba(16, 185, 129, 0.3);
+}
+
+.focus-ring__state {
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.focus-ring.is-running .focus-ring__center {
+  animation: ringPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+.focus-ring__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.focus-ring__actions .focus-btn {
+  padding: 12px 20px;
+}
+
+.focus-ring-card {
+  text-align: center;
+}

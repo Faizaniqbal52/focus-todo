@@ -3,6 +3,7 @@ import { AppDataContext } from '../../context/AppDataContext';
 import { useFocusTimer } from '../../context/FocusTimerContext';
 import { procrastinationReport } from '../../utils/score';
 import useToast from '../../hooks/useToast';
+import Icon from '../common/Icon';
 import './antiproc.css';
 
 function agePhrase(days) {
@@ -24,7 +25,7 @@ export default function AntiProcrastination() {
   const attack = () => {
     if (!target) return;
     start({ id: target.id, text: target.text });
-    toast.success(`⚔ Attacking: ${target.text}`);
+    toast.success(`Attacking: ${target.text}`);
     const el = document.getElementById('focus-timer');
     if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
@@ -34,10 +35,12 @@ export default function AntiProcrastination() {
     return (
       <section className="dash-card antiproc antiproc--clear">
         <div className="dash-card__head">
-          <span className="dash-card__label">Anti-Procrastination</span>
+          <span className="dash-card__label">
+          <Icon name="target" size={14} /> Anti-Procrastination
+        </span>
         </div>
         <div className="antiproc__clear-msg">
-          <span className="antiproc__check">✓</span>
+          <span className="antiproc__check"><Icon name="check" size={16} /></span>
           Nothing queued. Add a task and get moving.
         </div>
       </section>
@@ -48,10 +51,12 @@ export default function AntiProcrastination() {
     return (
       <section className="dash-card antiproc antiproc--clear">
         <div className="dash-card__head">
-          <span className="dash-card__label">Anti-Procrastination</span>
+          <span className="dash-card__label">
+          <Icon name="target" size={14} /> Anti-Procrastination
+        </span>
         </div>
         <div className="antiproc__clear-msg">
-          <span className="antiproc__check">✓</span>
+          <span className="antiproc__check"><Icon name="check" size={16} /></span>
           All caught up — nothing&rsquo;s slipping. Keep the momentum.
         </div>
       </section>
@@ -61,9 +66,11 @@ export default function AntiProcrastination() {
   return (
     <section className="dash-card antiproc antiproc--alert">
       <div className="dash-card__head">
-        <span className="dash-card__label">Anti-Procrastination</span>
+        <span className="dash-card__label">
+          <Icon name="target" size={14} /> Anti-Procrastination
+        </span>
         <span className="antiproc__count">
-          {count} task{count === 1 ? '' : 's'} slipping
+          <Icon name="alert" size={13} /> {count} slipping
         </span>
       </div>
 
@@ -74,7 +81,8 @@ export default function AntiProcrastination() {
       <div className="antiproc__meta">{agePhrase(target.ageDays)}</div>
 
       <button className="antiproc__attack" onClick={attack}>
-        ⚔ Attack Now
+        <Icon name="target" size={18} strokeWidth={2} />
+        Attack Now
       </button>
     </section>
   );

@@ -8,75 +8,97 @@
   margin: 28px 0 48px;
 }
 
-/* ----- Card shell ----- */
+/* ----- Card shell (glass, layered, lit from above) ----- */
 .dash-card {
-  padding: 22px 22px 18px;
-  border-radius: 18px;
-  background: linear-gradient(145deg, #181a25, #14161f);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  padding: 22px 22px 20px;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(160deg, var(--card-1), var(--card-2));
+  border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s ease,
+    border-color 0.25s ease;
   min-width: 0; /* lets charts shrink inside the grid */
 }
 
+/* a faint gradient hairline that catches light along the top edge */
+.dash-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 40%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
 .dash-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: rgba(167, 139, 250, 0.28);
   box-shadow:
-    0 12px 34px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(167, 139, 250, 0.18);
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(167, 139, 250, 0.16),
+    0 0 36px rgba(124, 58, 237, 0.16);
 }
 
 .dash-card__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .dash-card__label {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #a1a1aa;
+  color: var(--ink-dim);
 }
 
 .dash-card__flame {
-  font-size: 16px;
-  line-height: 1;
-  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.45));
+  display: inline-flex;
+  color: #34d399;
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.6));
 }
 
 .dash-card__sub {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--ink-faint);
   letter-spacing: 0.01em;
 }
 
-/* ----- Daily Power (green = performance, per the reference) ----- */
+/* ----- Daily Power (green = performance, glowing) ----- */
 .dash-power__value {
-  font-size: 56px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 58px;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #ffffff, #34d399);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  letter-spacing: -0.02em;
+  color: #eafff6;
+  text-shadow:
+    0 0 24px rgba(52, 211, 153, 0.55),
+    0 0 60px rgba(16, 185, 129, 0.3);
 }
 
 .dash-power__pct {
-  font-size: 24px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
   margin-left: 4px;
-  -webkit-text-fill-color: #34d399;
   color: #34d399;
-}
-
-.dash-card--power .dash-card__flame {
-  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.5));
+  text-shadow: 0 0 18px rgba(52, 211, 153, 0.5);
 }
 
 /* ----- Weekly Grade ----- */
@@ -86,37 +108,52 @@
 }
 
 .dash-grade__value {
-  font-size: 64px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 66px;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   margin: 4px 0 10px;
-  background: linear-gradient(135deg, #ffffff, #a78bfa);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  color: #f4f1ff;
+  text-shadow:
+    0 0 24px rgba(167, 139, 250, 0.5),
+    0 0 60px rgba(124, 58, 237, 0.28);
 }
 
 /* ----- Velocity ----- */
 .dash-velocity__value {
-  font-size: 40px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.03em;
-  color: #e5e7eb;
+  letter-spacing: -0.02em;
+  color: var(--ink);
 }
 
 .dash-velocity__unit {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.03em;
-  color: #6b7280;
+  color: var(--ink-faint);
   margin-left: 8px;
 }
 
 /* ----- Chart area ----- */
 .dash-chart {
   margin-top: 14px;
+  height: 120px;
+}
+
+.dash-chart--tall {
+  height: 150px;
+}
+
+/* neon glow on the plotted lines */
+.dash-card--power .recharts-area-curve {
+  filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.75));
+}
+.dash-card--velocity .recharts-area-curve {
+  filter: drop-shadow(0 0 5px rgba(167, 139, 250, 0.65));
 }
 
 .dash-chart__skeleton {

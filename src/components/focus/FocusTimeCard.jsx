@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { formatDuration } from '../../utils/time';
 import { FOCUS_SESSION_TARGET } from '../../utils/score';
+import Icon from '../common/Icon';
 
 const FocusChart = lazy(() => import('./charts/FocusChart'));
 
@@ -12,7 +13,9 @@ export default function FocusTimeCard({ today, series }) {
   return (
     <section className="dash-card focus-time">
       <div className="dash-card__head">
-        <span className="dash-card__label">Focus Time</span>
+        <span className="dash-card__label">
+          <Icon name="clock" size={14} /> Focus Time
+        </span>
         <span className="focus-time__sessions">
           {today.count}
           <span className="focus-time__target">/{FOCUS_SESSION_TARGET}</span>

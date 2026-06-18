@@ -12,11 +12,11 @@ import {
 // first paint — see DailyPowerCard.
 export default function TrendChart({ data }) {
   return (
-    <ResponsiveContainer width="100%" height={120}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={110}>
       <AreaChart data={data} margin={{ top: 8, right: 6, left: 6, bottom: 0 }}>
         <defs>
           <linearGradient id="srya-power-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#34d399" stopOpacity={0.45} />
+            <stop offset="0%" stopColor="#34d399" stopOpacity={0.5} />
             <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
           </linearGradient>
         </defs>
@@ -47,8 +47,10 @@ export default function TrendChart({ data }) {
           strokeWidth={2}
           fill="url(#srya-power-fill)"
           dot={{ r: 2.5, fill: '#34d399', strokeWidth: 0 }}
-          activeDot={{ r: 4, fill: '#6ee7b7', strokeWidth: 0 }}
-          isAnimationActive={false}
+          activeDot={{ r: 5, fill: '#6ee7b7', strokeWidth: 0 }}
+          isAnimationActive
+          animationDuration={1100}
+          animationEasing="ease-out"
         />
       </AreaChart>
     </ResponsiveContainer>

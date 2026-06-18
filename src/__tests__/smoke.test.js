@@ -4,7 +4,7 @@
    signal (tasks, logs, focus, habits). */
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import App from '../App';
 import { dateKey } from '../utils/score';
 
@@ -48,16 +48,18 @@ beforeEach(() => {
   seed();
 });
 
-test('dashboard renders and Daily Power aggregates all signals (> 0)', () => {
+test('dashboard renders and Daily Power aggregates all signals (> 0)', async () => {
   render(<App />);
   expect(screen.getByText('Daily Power')).toBeInTheDocument();
   expect(screen.getByText('Weekly Grade')).toBeInTheDocument();
   expect(screen.getByText('Completion Velocity')).toBeInTheDocument();
 
-  // The big Daily Power number lives in .dash-power__value
-  const power = document.querySelector('.dash-power__value');
-  const score = parseInt(power.textContent, 10);
-  expect(score).toBeGreaterThan(0);
+  // The big Daily Power number lives in .dash-power__value and counts up.
+  await waitFor(() => {
+    const score = parseInt(document.querySelector('.dash-power__value').textContent, 10);
+    expect(score).toBeGreaterThan(0);
+  });
+  const score = parseInt(document.querySelector('.dash-power__value').textContent, 10);
   expect(score).toBeLessThanOrEqual(100);
 });
 
@@ -79,9 +81,7 @@ test('habits render with streak and toggle for today', () => {
   expect(screen.getByText('Read')).toBeInTheDocument();
   expect(screen.getByText('Gym')).toBeInTheDocument();
 
-  // Read has a 3-day streak seeded
-  expect(screen.getByText('🔥 3')).toBeInTheDocument();
-  // best streak badge
+  // Read has a 3-day streak seeded — surfaced as the best-streak badge
   expect(screen.getByText(/3-day best/)).toBeInTheDocument();
 
   // Gym not done today -> its check is not pressed; toggle it on

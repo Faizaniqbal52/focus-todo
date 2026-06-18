@@ -37,7 +37,7 @@ export default function FocusChart({ data }) {
           labelStyle={{ color: '#a1a1aa' }}
           formatter={(value) => [`${value} min`, 'Focus']}
         />
-        <Bar dataKey="value" radius={[5, 5, 0, 0]} isAnimationActive={false}>
+        <Bar dataKey="value" radius={[5, 5, 0, 0]} isAnimationActive animationDuration={900} animationEasing="ease-out">
           {data.map((d) => (
             <Cell
               key={d.key}
